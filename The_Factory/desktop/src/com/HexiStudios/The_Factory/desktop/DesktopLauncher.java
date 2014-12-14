@@ -2,7 +2,7 @@ package com.HexiStudios.The_Factory.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.HexiStudios.The_Factory.TheFactory;
+import com.HexiStudios.The_Factory.Manager;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
@@ -11,6 +11,6 @@ public class DesktopLauncher {
 	      config.width = 480;
 	      config.height = 800;
 	      config.fullscreen = false;
-		new LwjglApplication(new TheFactory(), config);
+		new LwjglApplication(new Manager(), config);
 	}
 }

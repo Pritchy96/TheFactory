@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.HexiStudios.The_Factory.TheFactory;
+import com.HexiStudios.The_Factory.Manager;
 
 public class AndroidLauncher extends AndroidApplication {
 	@Override
@@ -13,6 +13,6 @@ public class AndroidLauncher extends AndroidApplication {
 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
 	      config.useAccelerometer = false;
 	      config.useCompass = false;
-		initialize(new TheFactory(), config);
+		initialize(new Manager(), config);
 	}
 }

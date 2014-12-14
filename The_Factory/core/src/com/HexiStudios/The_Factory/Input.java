@@ -1,14 +1,12 @@
 package com.HexiStudios.The_Factory;
 
-import sun.awt.windows.ThemeReader;
-
 import com.badlogic.gdx.InputProcessor;
 
 public class Input implements InputProcessor {
 	
-	public TheFactory game;
+	public Manager game;
 	
-	public Input(TheFactory game)
+	public Input(Manager game)
 	{
 		this.game = game;
 	}
