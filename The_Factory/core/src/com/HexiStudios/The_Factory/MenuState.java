@@ -1,26 +1,30 @@
 package com.HexiStudios.The_Factory;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class MenuState extends BasicState {
 
 	private SpriteBatch batch;
+	Texture background;
 
 	public MenuState(Manager manager)  {
 		super(manager);	      
 		batch = manager.getBatch();
+		background = new Texture(Gdx.files.internal("menuBackground.png"));
 	}
 
 	@Override
 	public void draw() {
-		//batch.draw(background, 0, 0);
+		batch.draw(background, 0, 0);
 		super.draw();
 	}
 
 	@Override
 	public void drawGUI() {
 		manager.getFont().setScale(4);
-		manager.getFont().draw(batch, "Tap to play!", 500, 500);
+		manager.getFont().draw(batch, "Tap to play!", 500, 700);
 		super.drawGUI();
 	}   
 
