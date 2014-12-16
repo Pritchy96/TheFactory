@@ -55,7 +55,6 @@ public class MenuState extends BasicState {
 
 	@Override
 	public void dispose() {
-		batch.dispose();
 		super.dispose();
 	}
 

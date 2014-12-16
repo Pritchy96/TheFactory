@@ -2,7 +2,9 @@ package com.HexiStudios.The_Factory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -10,235 +12,273 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
 
 public class MainState extends BasicState {
-	
-	   private Texture leftPlayer,  rightPlayer, background, product;
-	   private SpriteBatch batch;
-	   private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, lives = 3;
-	   private long timeBetweenProducts = 1000, lastSpawnTime;
-	   //Default value for Right (Changed in Constructor)
-	   private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241;	   
-	   private ArrayList<Product> products = new ArrayList<Product>();	   
-	   
-	   public MainState(Manager manager)  {
-		   super(manager);
-		   
-	      //Load the images.
-		  leftPlayer = new Texture(Gdx.files.internal("droid_left.png"));
-		  rightPlayer = new Texture(Gdx.files.internal("droid_right.png"));
-		  product = new Texture(Gdx.files.internal("product.png"));
-		  background = new Texture(Gdx.files.internal("background.png"));		   	      
 
-	      rightX = 1280 - rightPlayer.getWidth();
-	      
-	      batch = manager.getBatch();
-	   }
-	   
-	   @Override
-	   public void draw() {
-		      batch.draw(background, 0, 0);
-		      batch.draw(leftPlayer, leftX, bottomOffset + (leftLevel * platformGap));
-		      batch.draw(rightPlayer, rightX, bottomOffset + (rightLevel * platformGap));
-		      
-		      Iterator<Product> iter = products.iterator();
-		      while(iter.hasNext()) {
-		         Product p = iter.next();
-		         batch.draw(p.bitmap, p.xPosition, ((bottomOffset + (platformGap * p.level))));
-		      }
-		      super.draw();
-	   }
-	   
-	   @Override
-	   public void drawGUI() {
-		      manager.getFont().setScale(4);
-		      manager.getFont().draw(batch, "Score: " + Integer.toString(score), background.getWidth() - 330, background.getHeight()- 20);
-		      manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), background.getWidth() - 330, background.getHeight() - 70);
-		      super.drawGUI();
-	   }   
-	   
-	   @Override
-	   public void update() {
-		// check if we need to create a new product
-		      if(TimeUtils.nanoTime() - lastSpawnTime > timeBetweenProducts) spawnProduct();
+	private Texture leftPlayer,  rightPlayer, background, product;
+	private SpriteBatch batch;
+	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3;
+	private long timeBetweenProducts = 1000, lastSpawnTime;
+	//Default value for Right (Changed in Constructor)
+	private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241;	   
+	private ArrayList<Product> products = new ArrayList<Product>();	   
+	Preferences prefs = Gdx.app.getPreferences("Preferences");
 
-		      Iterator<Product> iter = products.iterator();
-		      while(iter.hasNext()) {
-		         Product p = iter.next();
-		         
-		       //Check its not at end
-	                if (p.vector < 0 && p.xPosition < leftEdge - p.bitmap.getWidth()/2)
-	                {
-	                    if (leftLevel == p.level)
-	                    {
-	                        if (p.level < numberOfLevels) {
-	                            p.level++;
-	                            score++;
-	                            p.vector = -p.vector;
-	                            p.timeLeft = p.totalTimeLeft;
-	                        }
-	                        else
-	                        {
-	                            score+=10;
-	                            p.level++;
-	                            p.timeLeft = p.totalTimeLeft;
-	                            iter.remove();
-	                        }
-	                    }
-	                    else
-	                    {
-	                    	if (p.timeLeft > 0)
-	                    	{
-	                    		p.timeLeft -= Gdx.graphics.getDeltaTime();
-	                    		
-	                    	}
-	                    	else
-	                    	{
-	                    		iter.remove();
-	                    		lives--;
-	                    	} 	
-	                    }
-	                }
-	                else if (p.vector > 0 && p.xPosition > rightEdge - p.bitmap.getWidth()/2)
-	                {
-	                    if (rightLevel == p.level)
-	                    {
-	                        p.level++;
-	                        score++;
-	                        p.vector = -p.vector;
-	                        p.timeLeft = p.totalTimeLeft;
-	                    }
-	                    else
-	                    {
-	                    	if (p.timeLeft > 0)
-	                    	{
-	                    		p.timeLeft -= Gdx.graphics.getDeltaTime();
-	                    		
-	                    	}
-	                    	else
-	                    	{
-	                    		iter.remove();
-	                    		lives--;
-	                    	} 	
-	                    }
-	                }
-	                 else
-	                {
-	                    p.xPosition += p.vector * 6 * (1/(Gdx.graphics.getDeltaTime()*40));
-	                }
-		      }
-		      
-		      //Reset game if lives < 1.
-	  		if (lives < 1)
-	  		{
-	  			lives = 3;
-	  			products.clear();
-	  			score = 0;
-	  			rightLevel = 0;
-	  			leftLevel = 1;
-	  		}
-	  		
-	  		super.update();
-	   }
-	   
-	   private void spawnProduct() {
-		      products.add(new Product(product, 604));
-		      lastSpawnTime = TimeUtils.nanoTime();
-		      timeBetweenProducts = TimeUtils.millisToNanos((MathUtils.random(1, 7)*1000));
-		   }
-		
-	   public void touchDown(int screenX, int screenY, int pointer, int button) {
-		      // process user input
-		         Vector3 touchPos = new Vector3();
-		         touchPos.set(screenX, screenY, 0);
-		         manager.getCamera().unproject(touchPos);
-		         
-		         if (touchPos.x > 1280/2)
-		         {
-		             if (touchPos.y < 1920/2)
-		             {
-		                 //Bottom Right tap.
-		                 if (rightLevel > 0)
-		                 {
-		                     rightLevel-=2;
-		                 }
+	public MainState(Manager manager)  {
+		super(manager);
 
-		             }
-		             else
-		             {
-		                 //Top Right tap.
-		                 if (rightLevel < numberOfLevels-1)
-		                 {
-		                     rightLevel+=2;
-		                 }
-		             }
-		         }
-		         else
-		         {
-		             if (touchPos.y < 1920/2)
-		             {
+		//Load the images.
+		leftPlayer = new Texture(Gdx.files.internal("droid_left.png"));
+		rightPlayer = new Texture(Gdx.files.internal("droid_right.png"));
+		product = new Texture(Gdx.files.internal("product.png"));
+		background = new Texture(Gdx.files.internal("background.png"));		   	      
 
-		                 //Bottom Left tap.
-		                 if (leftLevel > 1)
-		                 {
-		                     leftLevel-=2;
-		                 }
-		             }
-		             else
-		             {
-		                 //Top Left tap.
-		                 if (leftLevel < numberOfLevels)
-		                 {
-		                     leftLevel+=2;
-		                 }
-		             }
-		         }
-		         
-		         super.touchDown(screenX, screenY, pointer, button);
-		}
-		
-	   public void keyDown(int keycode) {
-		   
-		   //LeftUp
-			if (keycode == com.badlogic.gdx.Input.Keys.W)
-			{
-				if (leftLevel < numberOfLevels) {leftLevel+=2;}	
-			}
-			else if (keycode == com.badlogic.gdx.Input.Keys.S)
-			{
-				if (leftLevel > 1) {leftLevel-=2;}
-			}
-			else if (keycode == com.badlogic.gdx.Input.Keys.UP)
-			{
-				if (rightLevel < (numberOfLevels-1)) {rightLevel+=2;}
-			}
-			else if (keycode == com.badlogic.gdx.Input.Keys.DOWN)
-			{
-				if (rightLevel > 0) {rightLevel-=2;}
-			}
-			
-			super.keyDown(keycode);
-	   }
-			
-	   @Override
-	   public void dispose() {
-	      batch.dispose();
-	      super.dispose();
-	   }
+		rightX = 1280 - rightPlayer.getWidth();
 
-	   @Override
-	   public void resize(int width, int height) {
-		   super.resize(width, height);
-	   }
-
-	   @Override
-	   public void pause() {
-		   super.pause();
-	   }
-
-	   @Override
-	   public void resume() {
-		   super.resume();
-	   }
+		highscore = prefs.getInteger("score", 0);
+		batch = manager.getBatch();
 	}
+
+	@Override
+	public void draw() {
+		batch.draw(background, 0, 0);
+		batch.draw(leftPlayer, leftX, bottomOffset + (leftLevel * platformGap));
+		batch.draw(rightPlayer, rightX, bottomOffset + (rightLevel * platformGap));
+
+		Iterator<Product> iter = products.iterator();
+		while(iter.hasNext()) {
+			Product p = iter.next();
+			batch.draw(p.bitmap, p.xPosition, ((bottomOffset + (platformGap * p.level))));
+		}
+		super.draw();
+	}
+
+	@Override
+	public void drawGUI() {
+		manager.getFont().setScale(4);      
+		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 30, background.getHeight() - 20);
+
+		if (score > highscore)
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 30, background.getHeight() - 70);	
+		else
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 30, background.getHeight() - 70);	
+
+		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), background.getWidth() - 380, background.getHeight() - 20);
+		super.drawGUI();
+	}   
+
+	@Override
+	public void update() {
+		// check if we need to create a new product
+		if(TimeUtils.nanoTime() - lastSpawnTime > timeBetweenProducts) spawnProduct();
+
+		//Move products along, check they're not supposed to be falling.
+		updateProducts();
+
+		//Reset game if lives < 1.
+		checkLives();
+
+		super.update();
+	}
+
+	public void updateProducts()
+	{
+		Iterator<Product> iter = products.iterator();
+
+		while(iter.hasNext()) {
+			Product p = iter.next();
+
+			//Check its not at end
+			if (p.vector < 0 && p.xPosition < leftEdge - p.bitmap.getWidth()/2)
+			{
+				if (leftLevel == p.level)
+				{
+					if (p.level < numberOfLevels) {
+						p.level++;
+						score++;
+						p.vector = -p.vector;
+						p.timeLeft = p.totalTimeLeft;
+					}
+					else	//At the top, being removed.
+					{
+						score+=10;
+						p.level++;
+						p.timeLeft = p.totalTimeLeft;
+						iter.remove();
+					}
+				}
+				else	//At an edge.
+				{	
+					if (p.timeLeft > 0)	//If not ready to fall
+					{
+						p.timeLeft -= Gdx.graphics.getDeltaTime();
+
+					}
+					else	//Fall, lose a life!
+					{
+						iter.remove();
+						lives--;
+					} 	
+				}
+			}
+			//Same as above but for the Right side.
+			else if (p.vector > 0 && p.xPosition > rightEdge - p.bitmap.getWidth()/2)
+			{
+				if (rightLevel == p.level)
+				{
+					p.level++;
+					score++;
+					p.vector = -p.vector;
+					p.timeLeft = p.totalTimeLeft;
+				}
+				else
+				{
+					if (p.timeLeft > 0)
+					{
+						p.timeLeft -= Gdx.graphics.getDeltaTime();
+
+					}
+					else
+					{
+						iter.remove();
+						lives--;
+					} 	
+				}
+			}
+			else
+			{
+				//Move Product.
+				p.xPosition += p.vector * 6 * (1/(Gdx.graphics.getDeltaTime()*40));
+			}
+		}
+	}
+
+	public void checkLives()
+	{
+		if (lives < 1)
+		{
+			if (score > highscore)
+			{
+				highscore = score;
+				//Save Score
+				prefs.putInteger("score", highscore);
+				//persist preferences
+				prefs.flush();
+			}
+
+			//Reset game.
+			lives = 3;
+			products.clear();
+			score = 0;
+			rightLevel = 0;
+			leftLevel = 1;
+		}
+	}
+
+
+	private void spawnProduct() {
+		products.add(new Product(product, 604));
+		lastSpawnTime = TimeUtils.nanoTime();
+		timeBetweenProducts = TimeUtils.millisToNanos((MathUtils.random(1, 7)*1000));
+	}
+
+
+	public void touchDown(int screenX, int screenY, int pointer, int button) {
+		// process user input
+		Vector3 touchPos = new Vector3();
+		touchPos.set(screenX, screenY, 0);
+		manager.getCamera().unproject(touchPos);
+
+		if (touchPos.x > 1280/2)
+		{
+			if (touchPos.y < 1920/2)
+			{
+				//Bottom Right tap.
+				if (rightLevel > 0)
+				{
+					rightLevel-=2;
+				}
+
+			}
+			else
+			{
+				//Top Right tap.
+				if (rightLevel < numberOfLevels-1)
+				{
+					rightLevel+=2;
+				}
+			}
+		}
+		else
+		{
+			if (touchPos.y < 1920/2)
+			{
+
+				//Bottom Left tap.
+				if (leftLevel > 1)
+				{
+					leftLevel-=2;
+				}
+			}
+			else
+			{
+				//Top Left tap.
+				if (leftLevel < numberOfLevels)
+				{
+					leftLevel+=2;
+				}
+			}
+		}
+
+		super.touchDown(screenX, screenY, pointer, button);
+	}
+
+
+	public void keyDown(int keycode) {
+
+		//LeftUp
+		if (keycode == com.badlogic.gdx.Input.Keys.W)
+		{
+			if (leftLevel < numberOfLevels) {leftLevel+=2;}	
+		}
+		else if (keycode == com.badlogic.gdx.Input.Keys.S)
+		{
+			if (leftLevel > 1) {leftLevel-=2;}
+		}
+		else if (keycode == com.badlogic.gdx.Input.Keys.UP)
+		{
+			if (rightLevel < (numberOfLevels-1)) {rightLevel+=2;}
+		}
+		else if (keycode == com.badlogic.gdx.Input.Keys.DOWN)
+		{
+			if (rightLevel > 0) {rightLevel-=2;}
+		}
+
+		super.keyDown(keycode);
+	}
+
+	@Override
+
+	public void dispose() {
+		super.dispose();
+	}
+
+	@Override
+
+	public void resize(int width, int height) {
+		super.resize(width, height);
+	}
+
+	@Override
+
+	public void pause() {
+		super.pause();
+	}
+
+	@Override
+
+	public void resume() {
+		super.resume();
+	}
+}
 
 
 /*
@@ -373,4 +413,4 @@ public class Drop implements ApplicationListener {
    public void resume() {
    }
 }
-*/
+ */
