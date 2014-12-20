@@ -7,24 +7,36 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class MenuState extends BasicState {
 
 	private SpriteBatch batch;
-	Texture background;
+	Texture background, buttons, scrollingBackground;
+	int scrollY = 0;
 
 	public MenuState(Manager manager)  {
 		super(manager);	      
 		batch = manager.getBatch();
 		background = new Texture(Gdx.files.internal("menuBackground.png"));
+		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
+		buttons  = new Texture(Gdx.files.internal("menuButtons.png"));
 	}
 
 	@Override
 	public void draw() {
 		batch.draw(background, 0, 0);
+		
+		batch.draw(scrollingBackground, 0, scrollY);
+		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
+		batch.draw(buttons, 0, 0);
+		
+		if (scrollY < -scrollingBackground.getHeight())
+			scrollY = 0;
+		else
+			scrollY-=4;;
 		super.draw();
 	}
 
 	@Override
 	public void drawGUI() {
 		manager.getFont().setScale(4);
-		manager.getFont().draw(batch, "Tap to play!", 500, 700);
+		//manager.getFont().draw(batch, "Tap to play!", 500, 700);
 		super.drawGUI();
 	}   
 
