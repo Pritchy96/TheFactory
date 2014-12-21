@@ -13,13 +13,14 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class MainState extends BasicState {
 
-	private Texture leftPlayer,  rightPlayer, background, product;
+	private Texture leftPlayer,  rightPlayer, backgroundF1, backgroundF2, product;
 	private SpriteBatch batch;
 	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3;
 	private long timeBetweenProducts = 1000, lastSpawnTime;
 	//Default value for Right (Changed in Constructor)
-	private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241;	   
+	private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241, animTimer = 0.3f;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
+	private boolean animBool = false;
 	Preferences prefs = Gdx.app.getPreferences("Preferences");
 
 	public MainState(Manager manager)  {
@@ -29,7 +30,8 @@ public class MainState extends BasicState {
 		leftPlayer = new Texture(Gdx.files.internal("droid_left.png"));
 		rightPlayer = new Texture(Gdx.files.internal("droid_right.png"));
 		product = new Texture(Gdx.files.internal("product.png"));
-		background = new Texture(Gdx.files.internal("background.png"));		   	      
+		backgroundF1 = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
+		backgroundF2 = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
 
 		rightX = 1280 - rightPlayer.getWidth();
 
@@ -39,7 +41,15 @@ public class MainState extends BasicState {
 
 	@Override
 	public void draw() {
-		batch.draw(background, 0, 0);
+		if (animBool)
+		{
+			batch.draw(backgroundF1, 0, 0);
+		}
+		else
+		{
+			batch.draw(backgroundF2, 0, 0);
+		}
+		
 		batch.draw(leftPlayer, leftX, bottomOffset + (leftLevel * platformGap));
 		batch.draw(rightPlayer, rightX, bottomOffset + (rightLevel * platformGap));
 
@@ -54,14 +64,14 @@ public class MainState extends BasicState {
 	@Override
 	public void drawGUI() {
 		manager.getFont().setScale(4);      
-		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 30, background.getHeight() - 20);
+		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 30, backgroundF1.getHeight() - 20);
 
 		if (score > highscore)
-			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 30, background.getHeight() - 70);	
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 30, backgroundF1.getHeight() - 70);	
 		else
-			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 30, background.getHeight() - 70);	
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 30, backgroundF1.getHeight() - 70);	
 
-		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), background.getWidth() - 380, background.getHeight() - 20);
+		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1.getWidth() - 380, backgroundF1.getHeight() - 20);
 		super.drawGUI();
 	}   
 
@@ -72,6 +82,9 @@ public class MainState extends BasicState {
 
 		//Move products along, check they're not supposed to be falling.
 		updateProducts();
+		
+		//Reduce frame timer and change frame if needed.
+		animHandler();
 
 		//Reset game if lives < 1.
 		checkLives();
@@ -151,6 +164,16 @@ public class MainState extends BasicState {
 		}
 	}
 
+	public void animHandler ()
+	{
+		animTimer -= Gdx.graphics.getDeltaTime();
+		if (animTimer <= 0)
+		{
+			animTimer = 0.2f;
+			animBool = !animBool;
+		}
+	}
+	
 	public void checkLives()
 	{
 		if (lives < 1)
@@ -173,13 +196,11 @@ public class MainState extends BasicState {
 		}
 	}
 
-
 	private void spawnProduct() {
 		products.add(new Product(product, 604));
 		lastSpawnTime = TimeUtils.nanoTime();
 		timeBetweenProducts = TimeUtils.millisToNanos((MathUtils.random(1, 7)*1000));
 	}
-
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
 		// process user input
@@ -230,7 +251,6 @@ public class MainState extends BasicState {
 
 		super.touchDown(screenX, screenY, pointer, button);
 	}
-
 
 	public void keyDown(int keycode) {
 

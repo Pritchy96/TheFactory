@@ -41,7 +41,6 @@ public class Manager extends ApplicationAdapter {
 	      camera.update();
 	      currentState.update();
 	      
-
 	      //Tell the SpriteBatch to render in the
 	      //coordinate system specified by the camera, for game drawing.
 	      batch.setProjectionMatrix(getCamera().combined);
