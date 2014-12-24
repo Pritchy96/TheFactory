@@ -29,7 +29,7 @@ public class MenuState extends BasicState {
 		if (scrollY < -scrollingBackground.getHeight())
 			scrollY = 0;
 		else
-			scrollY-=4;;
+			scrollY -= 8;;
 		super.draw();
 	}
 

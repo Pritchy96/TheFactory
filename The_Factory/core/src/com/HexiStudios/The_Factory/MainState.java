@@ -32,7 +32,7 @@ public class MainState extends BasicState {
 		product = new Texture(Gdx.files.internal("product.png"));
 		backgroundF1 = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
 		backgroundF2 = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
-
+		
 		rightX = 1280 - rightPlayer.getWidth();
 
 		highscore = prefs.getInteger("score", 0);
@@ -41,12 +41,11 @@ public class MainState extends BasicState {
 
 	@Override
 	public void draw() {
-		if (animBool)
-		{
+
 			batch.draw(backgroundF1, 0, 0);
-		}
-		else
-		{
+			
+			if (!animBool)
+			{
 			batch.draw(backgroundF2, 0, 0);
 		}
 		
@@ -58,6 +57,7 @@ public class MainState extends BasicState {
 			Product p = iter.next();
 			batch.draw(p.bitmap, p.xPosition, ((bottomOffset + (platformGap * p.level))));
 		}
+		
 		super.draw();
 	}
 
