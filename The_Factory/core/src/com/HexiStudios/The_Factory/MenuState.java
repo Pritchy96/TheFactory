@@ -1,5 +1,7 @@
 package com.HexiStudios.The_Factory;
-
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -7,7 +9,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class MenuState extends BasicState {
 
 	private SpriteBatch batch;
-	Texture background, buttons, scrollingBackground;
+	Texture background, buttons, scrollingBackground, debugRect;	//DEBUG
+	private Rectangle playRect, optionsRect, creditsRect;
 	int scrollY = 0;
 
 	public MenuState(Manager manager)  {
@@ -16,6 +19,13 @@ public class MenuState extends BasicState {
 		background = new Texture(Gdx.files.internal("menuBackground.png"));
 		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
 		buttons  = new Texture(Gdx.files.internal("menuButtons.png"));
+		//DEBUG
+		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));
+		
+		//Rectangles are awkward: They start at bottom left.
+		playRect = new Rectangle(304, background.getHeight() - (612 + 240), 687, 240);
+		optionsRect = new Rectangle(304, background.getHeight() - (994 + 240), 687, 240);
+		creditsRect = new Rectangle(304, background.getHeight() - (1355 + 240), 687, 240);
 	}
 
 	@Override
@@ -26,10 +36,13 @@ public class MenuState extends BasicState {
 		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
 		batch.draw(buttons, 0, 0);
 		
+		//DEBUG
+		//batch.draw(debugRect, playRect.x, playRect.y, playRect.width, playRect.height);
+		
 		if (scrollY < -scrollingBackground.getHeight())
 			scrollY = 0;
 		else
-			scrollY -= 8;;
+			scrollY -= 8;
 		super.draw();
 	}
 
@@ -47,11 +60,25 @@ public class MenuState extends BasicState {
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
 		// process user input
-		//   Vector3 touchPos = new Vector3();
-		//  touchPos.set(screenX, screenY, 0);
-		//  manager.getCamera().unproject(touchPos);
-
-		manager.changeState(new MainState(manager));
+		Vector3 touchPos = new Vector3();
+		touchPos.set(screenX, screenY, 0);
+		manager.getCamera().unproject(touchPos);
+		Vector2 point = new Vector2(touchPos.x, touchPos.y);
+		
+		if (playRect.contains(point))
+		{
+			manager.changeState(new MainState(manager));
+		}
+		else if(optionsRect.contains(point))
+		{
+			manager.changeState(new OptionsState(manager));
+		}
+		else if(creditsRect.contains(point))
+		{
+			
+			
+		}
+		
 		super.touchDown(screenX, screenY, pointer, button);
 	}
 

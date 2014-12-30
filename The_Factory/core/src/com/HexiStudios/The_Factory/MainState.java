@@ -1,5 +1,6 @@
 package com.HexiStudios.The_Factory;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -88,6 +89,10 @@ public class MainState extends BasicState {
 
 		//Reset game if lives < 1.
 		checkLives();
+		
+		float pitch = (((float)score)  / 100)*4;
+		manager.getBgm().setPitch(0, 0.7f + pitch);
+		
 
 		super.update();
 	}
@@ -217,7 +222,6 @@ public class MainState extends BasicState {
 				{
 					rightLevel-=2;
 				}
-
 			}
 			else
 			{
@@ -248,7 +252,6 @@ public class MainState extends BasicState {
 				}
 			}
 		}
-
 		super.touchDown(screenX, screenY, pointer, button);
 	}
 

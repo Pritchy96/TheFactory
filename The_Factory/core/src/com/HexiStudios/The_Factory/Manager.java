@@ -2,6 +2,7 @@ package com.HexiStudios.The_Factory;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -14,7 +15,17 @@ public class Manager extends ApplicationAdapter {
 	   public Input inputProcessor;
 	   private BitmapFont font;
 	   private BasicState currentState;
+	   private Sound bgm;
+	   
 
+
+	public Sound getBgm() {
+		return bgm;
+	}
+
+	public void setBgm(Sound bgm) {
+		this.bgm = bgm;
+	}
 
 	@Override
 	   public void create() {
@@ -29,6 +40,14 @@ public class Manager extends ApplicationAdapter {
 	      setBatch(new SpriteBatch());
 	      
 	      currentState = new MenuState(this);
+	      bgm = Gdx.audio.newSound(Gdx.files.internal("bgm.ogg"));
+	      
+	      long streamID = -1;
+	      do {
+	          streamID = bgm.loop(1f, 0.7f, 0f);
+	      } while(streamID==-1);
+	      
+	      
 	   }
 
 	   @Override
@@ -67,6 +86,7 @@ public class Manager extends ApplicationAdapter {
 	   public void dispose() {
 		  currentState.dispose();
 	      getBatch().dispose();
+	      bgm.dispose();
 	   }
 
 	   @Override
