@@ -9,40 +9,29 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class MenuState extends BasicState {
 
 	private SpriteBatch batch;
-	Texture background, buttons, scrollingBackground, debugRect;	//DEBUG
+	Texture buttons, debugRect;	//DEBUG
 	private Rectangle playRect, optionsRect, creditsRect;
-	int scrollY = 0;
 
 	public MenuState(Manager manager)  {
 		super(manager);	      
+		
 		batch = manager.getBatch();
-		background = new Texture(Gdx.files.internal("menuBackground.png"));
-		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
+		
 		buttons  = new Texture(Gdx.files.internal("menuButtons.png"));
-		//DEBUG
-		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));
+		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));	//DEBUG
 		
 		//Rectangles are awkward: They start at bottom left.
-		playRect = new Rectangle(304, background.getHeight() - (612 + 240), 687, 240);
-		optionsRect = new Rectangle(304, background.getHeight() - (994 + 240), 687, 240);
-		creditsRect = new Rectangle(304, background.getHeight() - (1355 + 240), 687, 240);
+		playRect = new Rectangle(304, manager.getHeight() - (612 + 240), 687, 240);
+		optionsRect = new Rectangle(304, manager.getHeight() - (994 + 240), 687, 240);
+		creditsRect = new Rectangle(304, manager.getHeight() - (1355 + 240), 687, 240);
 	}
 
 	@Override
 	public void draw() {
-		batch.draw(background, 0, 0);
-		
-		batch.draw(scrollingBackground, 0, scrollY);
-		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
 		batch.draw(buttons, 0, 0);
 		
 		//DEBUG
 		//batch.draw(debugRect, playRect.x, playRect.y, playRect.width, playRect.height);
-		
-		if (scrollY < -scrollingBackground.getHeight())
-			scrollY = 0;
-		else
-			scrollY -= 8;
 		super.draw();
 	}
 

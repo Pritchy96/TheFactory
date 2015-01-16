@@ -1,11 +1,9 @@
 package com.HexiStudios.The_Factory;
 
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -21,8 +19,9 @@ public class MainState extends BasicState {
 	//Default value for Right (Changed in Constructor)
 	private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241, animTimer = 0.3f;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
-	private boolean animBool = false;
-	Preferences prefs = Gdx.app.getPreferences("Preferences");
+	private boolean animBool = false, sound;
+	
+	
 
 	public MainState(Manager manager)  {
 		super(manager);
@@ -35,9 +34,12 @@ public class MainState extends BasicState {
 		backgroundF2 = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
 		
 		rightX = 1280 - rightPlayer.getWidth();
+		
+		sound = manager.getPrefs().getBoolean("sound", true);
 
-		highscore = prefs.getInteger("score", 0);
+		highscore = manager.getPrefs().getInteger("score", 0);
 		batch = manager.getBatch();
+		
 	}
 
 	@Override
@@ -90,10 +92,8 @@ public class MainState extends BasicState {
 		//Reset game if lives < 1.
 		checkLives();
 		
-		float pitch = (((float)score)  / 100)*4;
+		float pitch = (((float)score)  / 10000)*4;
 		manager.getBgm().setPitch(0, 0.7f + pitch);
-		
-
 		super.update();
 	}
 
@@ -114,6 +114,8 @@ public class MainState extends BasicState {
 						score++;
 						p.vector = -p.vector;
 						p.timeLeft = p.totalTimeLeft;
+						if (sound) {manager.getMoveUpSound().play();};
+						
 					}
 					else	//At the top, being removed.
 					{
@@ -121,6 +123,7 @@ public class MainState extends BasicState {
 						p.level++;
 						p.timeLeft = p.totalTimeLeft;
 						iter.remove();
+						if (sound) {manager.getMoveUpSound().play();};
 					}
 				}
 				else	//At an edge.
@@ -146,6 +149,7 @@ public class MainState extends BasicState {
 					score++;
 					p.vector = -p.vector;
 					p.timeLeft = p.totalTimeLeft;
+					if (sound) {manager.getMoveUpSound().play();};
 				}
 				else
 				{
@@ -187,15 +191,18 @@ public class MainState extends BasicState {
 			{
 				highscore = score;
 				//Save Score
-				prefs.putInteger("score", highscore);
+				manager.getPrefs().putInteger("score", highscore);
 				//persist preferences
-				prefs.flush();
+				manager.getPrefs().flush();
 			}
 
 			//Reset game.
 			lives = 3;
 			products.clear();
 			score = 0;
+			manager.getBgm().stop();
+			manager.getBgm().loop(1f, 0.7f, 0f);
+			
 			rightLevel = 0;
 			leftLevel = 1;
 		}

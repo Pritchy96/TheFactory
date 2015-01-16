@@ -2,51 +2,54 @@ package com.HexiStudios.The_Factory;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 public class OptionsState extends BasicState {
 
-	private SpriteBatch batch;
-	Texture background, buttons, scrollingBackground, debugRect;	//DEBUG
+	private Manager manager;
+	Texture background, buttons, scrollingBackground, musicOff, soundOff, debugRect;	//DEBUG
 	private Rectangle musicRect, soundRect, backRect;
-	int scrollY = 0;
-	boolean back = false;
-	 
+	boolean music, sound;
 
 	public OptionsState(Manager manager)  {
 		super(manager);	      
-		batch = manager.getBatch();
-		background = new Texture(Gdx.files.internal("optionsBackground.png"));
-		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
+		this.manager = manager;
+
+		//Load textures
 		buttons  = new Texture(Gdx.files.internal("optionsButtons.png"));
-		
+		musicOff = new Texture(Gdx.files.internal("optionsMusicOffBtn.png"));
+		soundOff  = new Texture(Gdx.files.internal("optionsSoundOffBtn.png"));
 		//DEBUG
 		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));
-		
-		musicRect = new Rectangle(297, background.getHeight() - (687 + 240), 687, 240);
-		soundRect = new Rectangle(297, background.getHeight() - (687 + 240), 687, 240);
-		backRect = new Rectangle(297, background.getHeight() - (1215 + 240), 687, 240);
+
+		//Calculate button textures.
+		musicRect = new Rectangle(304, manager.getHeight() - (612 + 240), 687, 240);
+		soundRect = new Rectangle(304, manager.getHeight() - (994 + 240), 687, 240);
+		backRect = new Rectangle(304, manager.getHeight() - (1355 + 240), 687, 240);
+
+		//Set booleans (more efficient than constantly retrieving from prefs)
+		music = manager.getPrefs().getBoolean("music", true);
+		sound = manager.getPrefs().getBoolean("sound", true);
 	}
 
 	@Override
 	public void draw() {
-		batch.draw(background, 0, 0);
-		batch.draw(scrollingBackground, 0, scrollY);
-		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
-		batch.draw(buttons, 0, 0);
-		
-		//DEBUG
-		if (back)
+		manager.getBatch().draw(buttons, 0, 0);
+
+		if (!music)
 		{
-		batch.draw(debugRect, backRect.x, backRect.y, backRect.width, backRect.height);
+			manager.getBatch().draw(musicOff, musicRect.x, musicRect.y, musicRect.width, musicRect.height);
 		}
-		if (scrollY < -scrollingBackground.getHeight())
-			scrollY = 0;
-		else
-			scrollY -= 8;
+
+		if (!sound)
+		{
+			manager.getBatch().draw(soundOff, soundRect.x, soundRect.y, soundRect.width, soundRect.height);
+		}
+
+
+
 		super.draw();
 	}
 
@@ -66,21 +69,32 @@ public class OptionsState extends BasicState {
 		touchPos.set(screenX, screenY, 0);
 		manager.getCamera().unproject(touchPos);
 		Vector2 point = new Vector2(touchPos.x, touchPos.y);
-		
+
 		if (musicRect.contains(point))
 		{
-			
+			music = !music;
+			manager.getPrefs().putBoolean("music", music);
+			manager.getPrefs().flush();
+			manager.setMusic();
 		}
 		else if(soundRect.contains(point))
 		{
+			sound = !sound;
+			manager.getPrefs().putBoolean("sound", sound);
+			manager.getPrefs().flush();
 			
+			if (sound)
+			{
+				//Play sound to let user know sound is on.
+				manager.getMoveUpSound().play();
+			}
 		}
 		else if(backRect.contains(point))
 		{
+
 			manager.changeState(new MenuState(manager));
-			back = true;
 		}
-		
+
 		super.touchDown(screenX, screenY, pointer, button);
 	}
 

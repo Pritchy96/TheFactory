@@ -2,155 +2,208 @@ package com.HexiStudios.The_Factory;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Manager extends ApplicationAdapter {
-	
-	   private SpriteBatch batch;
-	   private OrthographicCamera camera;
-	   public Input inputProcessor;
-	   private BitmapFont font;
-	   private BasicState currentState;
-	   private Sound bgm;
-	   
 
+	private SpriteBatch batch;
+	private OrthographicCamera camera;
+	private Input inputProcessor;
+	private BitmapFont font;
+	private BasicState currentState;
+	private Sound bgm, moveUpSound;
+	private Preferences prefs;
+	private Texture background, scrollingBackground;
+	private int width, height, scrollY = 0; // Y pos of falling cake image.
+
+
+	@Override
+	public void create() {
+		inputProcessor=  new Input(this);
+		Gdx.input.setInputProcessor(inputProcessor);	   
+		prefs = Gdx.app.getPreferences("Preferences");
+		setFont(new BitmapFont());
+
+		// create the camera and the SpriteBatch
+		setCamera(new OrthographicCamera());
+		camera.setToOrtho(false, 1280, 1920);
+		setBatch(new SpriteBatch());
+
+		bgm = Gdx.audio.newSound(Gdx.files.internal("bgm.ogg"));
+		moveUpSound = Gdx.audio.newSound(Gdx.files.internal("moveUp.ogg")); 
+		background = new Texture(Gdx.files.internal("background.png"));
+		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
+		width = background.getWidth();
+		height = background.getHeight();
+
+		currentState = new MenuState(this);     
+		setMusic();
+	}
+
+	@Override
+	public void render() {
+		// clear the screen with Black.
+		Gdx.gl.glClearColor(0, 0, 0f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		//Tell the camera to update its matrices.
+		camera.update();
+		currentState.update();
+
+		if (prefs.getBoolean("music", false) == false)
+		{
+			bgm.stop();
+		}
+
+		//Tell the SpriteBatch to render in the
+		//coordinate system specified by the camera, for game drawing.
+		batch.setProjectionMatrix(getCamera().combined);
+		//Game Drawing
+		batch.begin();
+		//Draw background (for all screens)
+		
+		batch.draw(background, 0, 0, width, height);
+		
+		//if it's not the game state, draw the falling cakes.
+		if (!(currentState instanceof MainState))
+		{
+		batch.draw(scrollingBackground, 0, scrollY);
+		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
+		
+		if (scrollY < -scrollingBackground.getHeight())
+			scrollY = 0;
+		else
+			scrollY -= 8;
+		}
+		
+		currentState.draw();
+		batch.end();
+
+		//GUI Drawing
+		batch.begin();
+		currentState.drawGUI();
+		batch.end();
+	}
+
+	public void setMusic()
+	{
+		if (prefs.getBoolean("music", false) == false)
+		{
+			bgm.stop();
+		}
+		else
+		{
+			bgm.loop(1f, 0.7f, 0f);
+		}
+	}
+
+	public void touchDown(int screenX, int screenY, int pointer, int button) {
+		currentState.touchDown(screenX, screenY, pointer, button);
+	}
+
+	public void keyDown(int keycode) {
+		currentState.keyDown(keycode);
+	}
+
+	@Override
+	public void dispose() {
+		currentState.dispose();
+		getBatch().dispose();
+		bgm.dispose();
+	}
+
+	@Override
+	public void resize(int width, int height) {
+		currentState.resize(width, height);
+	}
+
+	@Override
+	public void pause() {
+		currentState.pause();
+	}
+
+	@Override
+	public void resume() {
+		currentState.resume();
+	}
+
+	public void changeState(BasicState state)
+	{
+		this.currentState = state; 
+	}
+
+	/**
+	 * @return the batch
+	 */
+	public SpriteBatch getBatch() {
+		return batch;
+	}
+
+	/**
+	 * @param batch the batch to set
+	 */
+	public void setBatch(SpriteBatch batch) {
+		this.batch = batch;
+	}
+
+	/**
+	 * @return the font
+	 */
+	public BitmapFont getFont() {
+		return font;
+	}
+
+	/**
+	 * @param font the font to set
+	 */
+	public void setFont(BitmapFont font) {
+		this.font = font;
+	}
+
+	/**
+	 * @return the camera
+	 */
+	public OrthographicCamera getCamera() {
+		return camera;
+	}
+
+	/**
+	 * @param camera the camera to set
+	 */
+	public void setCamera(OrthographicCamera camera) {
+		this.camera = camera;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
 
 	public Sound getBgm() {
 		return bgm;
 	}
 
-	public void setBgm(Sound bgm) {
-		this.bgm = bgm;
+	public Sound getMoveUpSound() {
+		return moveUpSound;
 	}
 
-	@Override
-	   public void create() {
-		   inputProcessor= new Input(this);
-		   Gdx.input.setInputProcessor(inputProcessor);
-		   
-		   setFont(new BitmapFont());
-
-	      // create the camera and the SpriteBatch
-	      setCamera(new OrthographicCamera());
-	      camera.setToOrtho(false, 1280, 1920);
-	      setBatch(new SpriteBatch());
-	      
-	      currentState = new MenuState(this);
-	      bgm = Gdx.audio.newSound(Gdx.files.internal("bgm.ogg"));
-	      
-	      long streamID = -1;
-	      do {
-	          streamID = bgm.loop(1f, 0.7f, 0f);
-	      } while(streamID==-1);
-	      
-	      
-	   }
-
-	   @Override
-	   public void render() {
-		  // clear the screen with Black.
-		  Gdx.gl.glClearColor(0, 0, 0f, 1);
-		  Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		      
-	      //Tell the camera to update its matrices.
-	      camera.update();
-	      currentState.update();
-	      
-	      //Tell the SpriteBatch to render in the
-	      //coordinate system specified by the camera, for game drawing.
-	      batch.setProjectionMatrix(getCamera().combined);
-	      //Game Drawing
-	      batch.begin();
-	      currentState.draw();
-	      batch.end();
-	      
-	      //GUI Drawing
-	      batch.begin();
-	      currentState.drawGUI();
-	      batch.end();
-	   }
-	   
-	   public void touchDown(int screenX, int screenY, int pointer, int button) {
-		   currentState.touchDown(screenX, screenY, pointer, button);
-		}
-		
-	   public void keyDown(int keycode) {
-		   currentState.keyDown(keycode);
-	   }
-			
-	   @Override
-	   public void dispose() {
-		  currentState.dispose();
-	      getBatch().dispose();
-	      bgm.dispose();
-	   }
-
-	   @Override
-	   public void resize(int width, int height) {
-		   currentState.resize(width, height);
-	   }
-
-	   @Override
-	   public void pause() {
-		   currentState.pause();
-	   }
-
-	   @Override
-	   public void resume() {
-		   currentState.resume();
-	   }
-	   
-	   public void changeState(BasicState state)
-	   {
-		   this.currentState = state; 
-	   }
-	   
-	   /**
-		 * @return the batch
-		 */
-		public SpriteBatch getBatch() {
-			return batch;
-		}
-
-		/**
-		 * @param batch the batch to set
-		 */
-		public void setBatch(SpriteBatch batch) {
-			this.batch = batch;
-		}
-
-	/**
-		 * @return the font
-		 */
-		public BitmapFont getFont() {
-			return font;
-		}
-
-		/**
-		 * @param font the font to set
-		 */
-		public void setFont(BitmapFont font) {
-			this.font = font;
-		}
-
-	/**
-		 * @return the camera
-		 */
-		public OrthographicCamera getCamera() {
-			return camera;
-		}
-
-		/**
-		 * @param camera the camera to set
-		 */
-		public void setCamera(OrthographicCamera camera) {
-			this.camera = camera;
-		}
+	public Preferences getPrefs() {
+		return prefs;
 	}
+
+	public void setPrefs(Preferences prefs) {
+		this.prefs = prefs;
+	}
+}
 
 
 
@@ -286,4 +339,4 @@ public class Drop implements ApplicationListener {
    public void resume() {
    }
 }
-*/
+ */
