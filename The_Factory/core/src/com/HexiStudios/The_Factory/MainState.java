@@ -12,14 +12,14 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class MainState extends BasicState {
 
-	private Texture leftPlayer,  rightPlayer, backgroundF1, backgroundF2, product;
+	private Texture leftPlayerTex,  rightPlayerTex, backgroundF1Tex, backgroundF2Tex;
 	private SpriteBatch batch;
-	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3;
-	private long timeBetweenProducts = 1000, lastSpawnTime;
+	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3, passes = 0, panicCounter = 0;
 	//Default value for Right (Changed in Constructor)
 	private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241, animTimer = 0.3f;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
 	private boolean animBool = false, sound;
+	private SpawnManager spawnManager = new SpawnManager(this);
 	
 	
 
@@ -27,33 +27,32 @@ public class MainState extends BasicState {
 		super(manager);
 
 		//Load the images.
-		leftPlayer = new Texture(Gdx.files.internal("droid_left.png"));
-		rightPlayer = new Texture(Gdx.files.internal("droid_right.png"));
-		product = new Texture(Gdx.files.internal("product.png"));
-		backgroundF1 = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
-		backgroundF2 = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
+		leftPlayerTex = new Texture(Gdx.files.internal("droid_left.png"));
+		rightPlayerTex = new Texture(Gdx.files.internal("droid_right.png"));
+		backgroundF1Tex = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
+		backgroundF2Tex = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
 		
-		rightX = 1280 - rightPlayer.getWidth();
+		rightX = 1280 - rightPlayerTex.getWidth();
 		
 		sound = manager.getPrefs().getBoolean("sound", true);
-
-		highscore = manager.getPrefs().getInteger("score", 0);
+		highscore = manager.getPrefs().getInteger("highscore", 0);
 		batch = manager.getBatch();
+		
 		
 	}
 
 	@Override
 	public void draw() {
 
-			batch.draw(backgroundF1, 0, 0);
+			batch.draw(backgroundF1Tex, 0, 0);
 			
 			if (!animBool)
 			{
-			batch.draw(backgroundF2, 0, 0);
+			batch.draw(backgroundF2Tex, 0, 0);
 		}
 		
-		batch.draw(leftPlayer, leftX, bottomOffset + (leftLevel * platformGap));
-		batch.draw(rightPlayer, rightX, bottomOffset + (rightLevel * platformGap));
+		batch.draw(leftPlayerTex, leftX, bottomOffset + (leftLevel * platformGap));
+		batch.draw(rightPlayerTex, rightX, bottomOffset + (rightLevel * platformGap));
 
 		Iterator<Product> iter = products.iterator();
 		while(iter.hasNext()) {
@@ -67,22 +66,23 @@ public class MainState extends BasicState {
 	@Override
 	public void drawGUI() {
 		manager.getFont().setScale(4);      
-		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 30, backgroundF1.getHeight() - 20);
+		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 30, backgroundF1Tex.getHeight() - 20);
 
 		if (score > highscore)
-			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 30, backgroundF1.getHeight() - 70);	
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 30, backgroundF1Tex.getHeight() - 70);	
 		else
-			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 30, backgroundF1.getHeight() - 70);	
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 30, backgroundF1Tex.getHeight() - 70);	
 
-		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1.getWidth() - 380, backgroundF1.getHeight() - 20);
+		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1Tex.getWidth() - 380, backgroundF1Tex.getHeight() - 20);
 		super.drawGUI();
 	}   
 
 	@Override
 	public void update() {
-		// check if we need to create a new product
-		if(TimeUtils.nanoTime() - lastSpawnTime > timeBetweenProducts) spawnProduct();
-
+		
+		//Spawn products if ready.
+		spawnManager.Update();
+		
 		//Move products along, check they're not supposed to be falling.
 		updateProducts();
 		
@@ -112,6 +112,8 @@ public class MainState extends BasicState {
 					if (p.level < numberOfLevels) {
 						p.level++;
 						score++;
+						passes++;
+						panicCounter++;
 						p.vector = -p.vector;
 						p.timeLeft = p.totalTimeLeft;
 						if (sound) {manager.getMoveUpSound().play();};
@@ -121,6 +123,8 @@ public class MainState extends BasicState {
 					{
 						score+=10;
 						p.level++;
+						passes++;
+						panicCounter++;
 						p.timeLeft = p.totalTimeLeft;
 						iter.remove();
 						if (sound) {manager.getMoveUpSound().play();};
@@ -147,6 +151,8 @@ public class MainState extends BasicState {
 				{
 					p.level++;
 					score++;
+					passes++;
+					panicCounter++;
 					p.vector = -p.vector;
 					p.timeLeft = p.totalTimeLeft;
 					if (sound) {manager.getMoveUpSound().play();};
@@ -161,6 +167,7 @@ public class MainState extends BasicState {
 					else
 					{
 						iter.remove();
+						panicCounter = 0;
 						lives--;
 					} 	
 				}
@@ -191,12 +198,14 @@ public class MainState extends BasicState {
 			{
 				highscore = score;
 				//Save Score
-				manager.getPrefs().putInteger("score", highscore);
+				manager.getPrefs().putInteger("highscore", highscore);
 				//persist preferences
 				manager.getPrefs().flush();
 			}
 
 			//Reset game.
+			manager.changeState(new GameOverState(manager, score));
+			/*
 			lives = 3;
 			products.clear();
 			score = 0;
@@ -205,13 +214,8 @@ public class MainState extends BasicState {
 			
 			rightLevel = 0;
 			leftLevel = 1;
+			*/
 		}
-	}
-
-	private void spawnProduct() {
-		products.add(new Product(product, 604));
-		lastSpawnTime = TimeUtils.nanoTime();
-		timeBetweenProducts = TimeUtils.millisToNanos((MathUtils.random(1, 7)*1000));
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
@@ -288,6 +292,9 @@ public class MainState extends BasicState {
 	@Override
 
 	public void dispose() {
+		
+		
+		
 		super.dispose();
 	}
 
@@ -300,16 +307,64 @@ public class MainState extends BasicState {
 	@Override
 
 	public void pause() {
+		manager.getPrefs().putInteger("score", score);
+		manager.getPrefs().putInteger("passes", passes);
+		manager.getPrefs().putInteger("lives", lives);
+		
+		if (score > highscore)
+		{
+			manager.getPrefs().putInteger("highscore", score);
+		}
+		
 		super.pause();
+		
 	}
 
 	@Override
 
 	public void resume() {
 		super.resume();
+		//if game has reset
+		if (score == 0)
+		{
+			score = manager.getPrefs().getInteger("score", 0);
+			passes = manager.getPrefs().getInteger("passes", score);
+			lives = manager.getPrefs().getInteger("lives", 0);
+		}
 	}
+
+public int getPasses() {
+	return passes;
 }
 
+public void setPasses(int passes) {
+	this.passes = passes;
+}
+
+public ArrayList<Product> getProducts() {
+	return products;
+}
+
+public void setProducts(ArrayList<Product> products) {
+	this.products = products;
+}
+
+public int getScore() {
+	return score;
+}
+
+public void setScore(int score) {
+	this.score = score;
+}
+
+public int getPanicCounter() {
+	return panicCounter;
+}
+
+public void setPanicCounter(int panicCounter) {
+	this.panicCounter = panicCounter;
+}
+}
 
 /*
 public class Drop implements ApplicationListener {

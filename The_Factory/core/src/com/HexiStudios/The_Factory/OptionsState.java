@@ -53,7 +53,7 @@ public class OptionsState extends BasicState {
 		super.draw();
 	}
 
-	@Override
+	@Override 
 	public void drawGUI() {
 		manager.getFont().setScale(4);
 		super.drawGUI();
