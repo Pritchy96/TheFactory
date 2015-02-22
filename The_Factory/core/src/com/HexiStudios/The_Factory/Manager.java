@@ -3,6 +3,7 @@ package com.HexiStudios.The_Factory;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -17,7 +18,9 @@ public class Manager extends ApplicationAdapter {
 	private Input inputProcessor;
 	private BitmapFont font;
 	private BasicState currentState;
-	private Sound bgm, moveUpSound;
+	//private Sound bgm;
+	private Sound moveUpSound;
+	private Music bgMusic;
 	private Preferences prefs;
 	private Texture background, scrollingBackground;
 	private int width, height, scrollY = 0; // Y pos of falling cake image.
@@ -35,14 +38,14 @@ public class Manager extends ApplicationAdapter {
 		camera.setToOrtho(false, 1280, 1920);
 		setBatch(new SpriteBatch());
 
-		bgm = Gdx.audio.newSound(Gdx.files.internal("bgm.ogg"));
+		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("bgm.ogg"));
 		moveUpSound = Gdx.audio.newSound(Gdx.files.internal("moveUp.ogg")); 
 		background = new Texture(Gdx.files.internal("background.png"));
 		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
 		width = background.getWidth();
 		height = background.getHeight();
 
-		currentState = new MenuState(this);     
+		currentState = new LogoState(this);     
 		setMusic();
 	}
 
@@ -58,7 +61,7 @@ public class Manager extends ApplicationAdapter {
 
 		if (prefs.getBoolean("music", false) == false)
 		{
-			bgm.stop();
+			bgMusic.stop();
 		}
 
 		//Tell the SpriteBatch to render in the
@@ -68,11 +71,12 @@ public class Manager extends ApplicationAdapter {
 		batch.begin();
 		//Draw background (for all screens)
 		
-		batch.draw(background, 0, 0, width, height);
+		
 		
 		//if it's not the game state, draw the falling cakes.
-		if (!(currentState instanceof MainState))
+		if ((!(currentState instanceof MainState) && !(currentState instanceof LogoState)))
 		{
+		batch.draw(background, 0, 0, width, height);
 		batch.draw(scrollingBackground, 0, scrollY);
 		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
 		
@@ -95,11 +99,13 @@ public class Manager extends ApplicationAdapter {
 	{
 		if (prefs.getBoolean("music", false) == false)
 		{
-			bgm.stop();
+			bgMusic.stop();
 		}
 		else
 		{
-			bgm.loop(1f, 0.7f, 0f);
+			//bgm.loop(1f, 0.7f, 0f);
+			bgMusic.play();
+			bgMusic.setLooping(true);
 		}
 	}
 
@@ -115,7 +121,7 @@ public class Manager extends ApplicationAdapter {
 	public void dispose() {
 		currentState.dispose();
 		getBatch().dispose();
-		bgm.dispose();
+		bgMusic.dispose();
 	}
 
 	@Override
@@ -136,6 +142,7 @@ public class Manager extends ApplicationAdapter {
 	public void changeState(BasicState state)
 	{
 		this.currentState = state; 
+		System.out.println(state.getClass().getName());
 	}
 
 	/**
@@ -188,8 +195,8 @@ public class Manager extends ApplicationAdapter {
 		return height;
 	}
 
-	public Sound getBgm() {
-		return bgm;
+	public Music getBgm() {
+		return bgMusic;
 	}
 
 	public Sound getMoveUpSound() {

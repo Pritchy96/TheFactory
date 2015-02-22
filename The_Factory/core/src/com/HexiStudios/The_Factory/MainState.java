@@ -6,9 +6,7 @@ import java.util.Iterator;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.TimeUtils;
 
 public class MainState extends BasicState {
 
@@ -31,7 +29,6 @@ public class MainState extends BasicState {
 		rightPlayerTex = new Texture(Gdx.files.internal("droid_right.png"));
 		backgroundF1Tex = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
 		backgroundF2Tex = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
-		
 		rightX = 1280 - rightPlayerTex.getWidth();
 		
 		sound = manager.getPrefs().getBoolean("sound", true);
@@ -92,8 +89,8 @@ public class MainState extends BasicState {
 		//Reset game if lives < 1.
 		checkLives();
 		
-		float pitch = (((float)score)  / 10000)*4;
-		manager.getBgm().setPitch(0, 0.7f + pitch);
+		//float pitch = (((float)score)  / 10000)*4;
+		//manager.getBgm().setPitch(0, 0.7f + pitch);
 		super.update();
 	}
 
@@ -121,7 +118,7 @@ public class MainState extends BasicState {
 					}
 					else	//At the top, being removed.
 					{
-						score+=10;
+						score+=2;
 						p.level++;
 						passes++;
 						panicCounter++;
