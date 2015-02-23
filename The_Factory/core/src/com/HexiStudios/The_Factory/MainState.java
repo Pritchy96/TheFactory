@@ -34,8 +34,6 @@ public class MainState extends BasicState {
 		sound = manager.getPrefs().getBoolean("sound", true);
 		highscore = manager.getPrefs().getInteger("highscore", 0);
 		batch = manager.getBatch();
-		
-		
 	}
 
 	@Override
