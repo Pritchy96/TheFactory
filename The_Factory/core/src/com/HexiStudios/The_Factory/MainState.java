@@ -34,6 +34,9 @@ public class MainState extends BasicState {
 		sound = manager.getPrefs().getBoolean("sound", true);
 		highscore = manager.getPrefs().getInteger("highscore", 0);
 		batch = manager.getBatch();
+		
+		//Load add ready for game over screen
+		manager.getAdHandler().LoadInterstital();
 	}
 
 	@Override
@@ -326,6 +329,9 @@ public class MainState extends BasicState {
 			passes = manager.getPrefs().getInteger("passes", score);
 			lives = manager.getPrefs().getInteger("lives", 0);
 		}
+		
+		//Load add ready for game over screen (might unload on pause?)
+		manager.getAdHandler().LoadInterstital();
 	}
 
 public int getPasses() {

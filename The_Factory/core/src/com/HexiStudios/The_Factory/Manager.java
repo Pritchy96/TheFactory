@@ -24,7 +24,14 @@ public class Manager extends ApplicationAdapter {
 	private Preferences prefs;
 	private Texture background, scrollingBackground;
 	private int width, height, scrollY = 0; // Y pos of falling cake image.
+	private ActionResolver adHandler;
 
+	
+	
+	public Manager(ActionResolver AdHandler)
+	{
+		adHandler = AdHandler;
+	}
 
 	@Override
 	public void create() {
@@ -45,7 +52,7 @@ public class Manager extends ApplicationAdapter {
 		width = background.getWidth();
 		height = background.getHeight();
 
-		currentState = new LogoState(this);     
+		currentState = new LogoState(this); 
 		setMusic();
 	}
 
@@ -209,6 +216,10 @@ public class Manager extends ApplicationAdapter {
 
 	public void setPrefs(Preferences prefs) {
 		this.prefs = prefs;
+	}
+
+	public ActionResolver getAdHandler() {
+		return adHandler;
 	}
 }
 
