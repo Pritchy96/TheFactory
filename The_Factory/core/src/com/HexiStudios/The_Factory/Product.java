@@ -8,7 +8,7 @@ public class Product {
     public int vector = 1;
     public int xPosition;
     float timeLeft;
-    float totalTimeLeft = 1f;
+    float totalTimeLeft = 0.6f;
 
     public Product(Texture bitmap, int xPosition) {
         level = 0;

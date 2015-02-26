@@ -12,12 +12,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class LogoState extends BasicState {
 
 	private SpriteBatch batch;
-	private long fadeTime = 2000, waitTime = 1000, startTime;
+	private long fadeTime = 700, waitTime = 250, startTime;
 	private Texture logo; 
 
 	public LogoState(Manager manager)  {
 		super(manager);	      
-		
+
 		batch = manager.getBatch();
 		logo  = new Texture(Gdx.files.internal("logo.png"));
 		startTime = TimeUtils.nanosToMillis(TimeUtils.nanoTime());
@@ -26,23 +26,24 @@ public class LogoState extends BasicState {
 	@Override
 	public void draw() {
 		long currentTime = TimeUtils.nanosToMillis(TimeUtils.nanoTime()) - startTime;
-		
+
 		//Time into current fade or wait.
 		float timeIntoPhase = 0;
-		
+
 		//Fade in
 		if (currentTime < fadeTime)
 		{
 			timeIntoPhase = currentTime;
 			float alpha = (timeIntoPhase / fadeTime);
 			batch.setColor(1.0f, 1.0f, 1.0f, alpha);
-			
+			batch.draw(logo, 0, 0);
+
 		}
 		//Wait
 		else if (currentTime < (fadeTime + waitTime))
 		{
 			timeIntoPhase = currentTime - fadeTime;
-			
+			batch.draw(logo, 0, 0);
 		}
 		//Fade out
 		else if (currentTime < ((2*fadeTime) + waitTime))
@@ -50,16 +51,15 @@ public class LogoState extends BasicState {
 			timeIntoPhase = currentTime - (fadeTime + waitTime);
 			float alpha = 1-(timeIntoPhase / fadeTime);
 			batch.setColor(1.0f, 1.0f, 1.0f, alpha);
-			
+			batch.draw(logo, 0, 0);
+
 		}
 		//Change State
 		else
 		{
 			batch.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-		 manager.changeState(new MenuState(manager));
+			manager.changeState(new MenuState(manager));
 		}
-		
-		batch.draw(logo, 0, 0);
 		
 		super.draw();
 	}
@@ -81,7 +81,7 @@ public class LogoState extends BasicState {
 		touchPos.set(screenX, screenY, 0);
 		manager.getCamera().unproject(touchPos);
 		Vector2 point = new Vector2(touchPos.x, touchPos.y);
-		
+
 		//manager.changeState(new MenuState(manager));
 		super.touchDown(screenX, screenY, pointer, button);
 	}
