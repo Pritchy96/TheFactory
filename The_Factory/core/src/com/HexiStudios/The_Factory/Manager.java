@@ -23,7 +23,7 @@ public class Manager extends ApplicationAdapter {
 	private Music bgMusic;
 	private Preferences prefs;
 	private Texture background, scrollingBackground;
-	private int width, height, scrollY = 0; // Y pos of falling cake image.
+	private int width, height, scrollY = 0; //Y pos of falling cake image.
 	private ActionResolver adHandler;
 
 	

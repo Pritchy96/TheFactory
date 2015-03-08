@@ -64,8 +64,7 @@ public class MenuState extends BasicState {
 		}
 		else if(creditsRect.contains(point))
 		{
-			
-			
+			manager.changeState(new AboutState(manager));
 		}
 		
 		super.touchDown(screenX, screenY, pointer, button);
