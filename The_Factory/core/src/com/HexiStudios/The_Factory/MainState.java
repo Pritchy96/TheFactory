@@ -14,7 +14,7 @@ public class MainState extends BasicState {
 	private SpriteBatch batch;
 	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3, passes = 0, panicCounter = 0;
 	//Default value for Right (Changed in Constructor)
-	private float leftX = 0, rightX = 200, leftEdge = 320, rightEdge = 956, platformGap = 297, bottomOffset = 241, animTimer = 0.3f;	   
+	private float leftX = 0, rightX = 107, leftEdge = 171, rightEdge = 510, platformGap = 158, bottomOffset = 129, animTimer = 0.3f;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
 	private boolean animBool = false, sound;
 	private SpawnManager spawnManager = new SpawnManager(this);
@@ -29,7 +29,7 @@ public class MainState extends BasicState {
 		rightPlayerTex = new Texture(Gdx.files.internal("droid_right.png"));
 		backgroundF1Tex = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
 		backgroundF2Tex = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
-		rightX = 1280 - rightPlayerTex.getWidth();
+		rightX = 683 - rightPlayerTex.getWidth();
 		
 		sound = manager.getPrefs().getBoolean("sound", true);
 		highscore = manager.getPrefs().getInteger("highscore", 0);
@@ -37,6 +37,9 @@ public class MainState extends BasicState {
 		
 		//Load add ready for game over screen
 		manager.getAdHandler().LoadInterstital();
+		
+		manager.getCamera().setToOrtho(false, 1000, 1000);
+		manager.getCamera().setToOrtho(false, 683, 1023);
 	}
 
 	@Override
@@ -63,15 +66,15 @@ public class MainState extends BasicState {
 
 	@Override
 	public void drawGUI() {
-		manager.getFont().setScale(4);      
-		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 30, backgroundF1Tex.getHeight() - 20);
+		manager.getFont().setScale(2);      
+		manager.getFont().draw(batch, "Score: " + Integer.toString(score), 20, backgroundF1Tex.getHeight() - 6);
 
 		if (score > highscore)
-			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 30, backgroundF1Tex.getHeight() - 70);	
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 20, backgroundF1Tex.getHeight() - 36);	
 		else
-			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 30, backgroundF1Tex.getHeight() - 70);	
+			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 20, backgroundF1Tex.getHeight() - 36);	
 
-		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1Tex.getWidth() - 380, backgroundF1Tex.getHeight() - 20);
+		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1Tex.getWidth() - 115, backgroundF1Tex.getHeight() - 6);
 		super.drawGUI();
 	}   
 
@@ -173,7 +176,7 @@ public class MainState extends BasicState {
 			else
 			{
 				//Move Product.
-				p.xPosition += p.vector * 6 * (1/(Gdx.graphics.getDeltaTime()*40));
+				p.xPosition += p.vector * 3 * (1/(Gdx.graphics.getDeltaTime()*40));
 			}
 		}
 	}
@@ -222,9 +225,9 @@ public class MainState extends BasicState {
 		touchPos.set(screenX, screenY, 0);
 		manager.getCamera().unproject(touchPos);
 
-		if (touchPos.x > 1280/2)
+		if (touchPos.x > 683/2)
 		{
-			if (touchPos.y < 1920/2)
+			if (touchPos.y < 1024/2)
 			{
 				//Bottom Right tap.
 				if (rightLevel > 0)
@@ -243,7 +246,7 @@ public class MainState extends BasicState {
 		}
 		else
 		{
-			if (touchPos.y < 1920/2)
+			if (touchPos.y < 1024/2)
 			{
 
 				//Bottom Left tap.

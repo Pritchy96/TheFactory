@@ -42,9 +42,10 @@ public class Manager extends ApplicationAdapter {
 
 		// create the camera and the SpriteBatch
 		setCamera(new OrthographicCamera());
-		camera.setToOrtho(false, 1280, 1920);
+		camera.setToOrtho(false, 683, 1024);
+		
 		setBatch(new SpriteBatch());
-
+		batch.setProjectionMatrix(camera.combined);
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("bgm.ogg"));
 		moveUpSound = Gdx.audio.newSound(Gdx.files.internal("moveUp.ogg")); 
 		background = new Texture(Gdx.files.internal("background.png"));
@@ -133,7 +134,11 @@ public class Manager extends ApplicationAdapter {
 
 	@Override
 	public void resize(int width, int height) {
+		
+		
 		currentState.resize(width, height);
+		camera.setToOrtho(false, 683, 1024);
+		batch.setProjectionMatrix(camera.combined);
 	}
 
 	@Override

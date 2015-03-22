@@ -15,9 +15,9 @@ import com.HexiStudios.The_Factory.Manager;
 public class AndroidLauncher extends AndroidApplication implements ActionResolver {
 
 	private static final String AD_UNIT_ID_INTERSTITIAL = "ca-app-pub-6916351754834612/3808499421";
-	private static final String GOOGLE_PLAY_URL = "https://play.google.com/store/apps/developer?id=TheInvader360";
-	private static final String GITHUB_URL = "https://github.com/TheInvader360";
-	private static final String BLOG_URL = "http://theinvader360.blogspot.co.uk/";
+	//private static final String GOOGLE_PLAY_URL = "https://play.google.com/store/apps/developer?id=TheInvader360";
+	//private static final String GITHUB_URL = "https://github.com/TheInvader360";
+	//private static final String BLOG_URL = "http://theinvader360.blogspot.co.uk/";
 	protected View gameView;
 	private InterstitialAd interstitialAd;
 
@@ -37,11 +37,11 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 			@Override
 			public void onAdLoaded() {
 
-				Toast.makeText(getApplicationContext(), "Finished Loading Interstitial", Toast.LENGTH_SHORT).show();
+				//Toast.makeText(getApplicationContext(), "Finished Loading Interstitial", Toast.LENGTH_SHORT).show();
 			}
 			@Override
 			public void onAdClosed() {
-				Toast.makeText(getApplicationContext(), "Closed Interstitial", Toast.LENGTH_SHORT).show();
+				//Toast.makeText(getApplicationContext(), "Closed Interstitial", Toast.LENGTH_SHORT).show();
 			}
 		});
 
@@ -56,7 +56,7 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 					if (!interstitialAd.isLoaded()) {
 						AdRequest interstitialRequest = new AdRequest.Builder().build();
 						interstitialAd.loadAd(interstitialRequest);
-						Toast.makeText(getApplicationContext(), "Loading Interstitial", Toast.LENGTH_SHORT).show();
+						//Toast.makeText(getApplicationContext(), "Loading Interstitial", Toast.LENGTH_SHORT).show();
 					}
 				}
 			});

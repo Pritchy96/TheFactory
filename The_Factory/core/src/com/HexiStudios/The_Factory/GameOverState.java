@@ -1,6 +1,7 @@
 package com.HexiStudios.The_Factory;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -8,11 +9,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class GameOverState extends BasicState {
 
 	private SpriteBatch batch;
-	private int highscore = manager.getPrefs().getInteger("highscore", 0), textScale = 6;
+	private int highscore = manager.getPrefs().getInteger("highscore", 0), textScale = 3;
 	TextBounds line1Bounds, line2Bounds, line3Bounds, line4Bounds;
 	String line1, line2, line3, line4;
 	//Separate font instances so the .getbound method works (libgtx is bugged)
 	BitmapFont font1 = new BitmapFont(), font2 = new BitmapFont(), font3 = new BitmapFont(), font4 = new BitmapFont();
+	long startTime;
 
 	public GameOverState(Manager manager, int score)  {
 		super(manager);	
@@ -40,6 +42,8 @@ public class GameOverState extends BasicState {
 		line2Bounds = font2.getBounds(line2);
 		line3Bounds = font3.getBounds(line3);
 		line4Bounds = font4.getBounds(line4);
+		
+		startTime = TimeUtils.millis();
 	}
 
 	@Override
@@ -51,7 +55,7 @@ public class GameOverState extends BasicState {
 	public void drawGUI() {	
 		//How far down the page to draw each line.
 		//Is further offset for the second line so it is drawn under the first and so on.
-		int lineOffsetY = manager.getHeight() - 600;		
+		int lineOffsetY = manager.getHeight() - 320;		
 
 		manager.getFont().draw(batch, line1, (manager.getWidth()/2) - (line1Bounds.width/2), lineOffsetY);	
 
@@ -75,14 +79,17 @@ public class GameOverState extends BasicState {
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
-		// process user input
-		Vector3 touchPos = new Vector3();
-		touchPos.set(screenX, screenY, 0);
-		manager.getCamera().unproject(touchPos);
-		Vector2 point = new Vector2(touchPos.x, touchPos.y);
-
-		manager.changeState(new MenuState(manager));
-		super.touchDown(screenX, screenY, pointer, button);
+		if (TimeUtils.timeSinceMillis(startTime) > 2000)
+		{
+			// process user input
+			Vector3 touchPos = new Vector3();
+			touchPos.set(screenX, screenY, 0);
+			manager.getCamera().unproject(touchPos);
+			Vector2 point = new Vector2(touchPos.x, touchPos.y);
+	
+			manager.changeState(new MenuState(manager));
+			super.touchDown(screenX, screenY, pointer, button);
+		}
 	}
 
 	public void keyDown(int keycode) {

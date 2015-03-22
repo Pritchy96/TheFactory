@@ -21,9 +21,9 @@ public class MenuState extends BasicState {
 		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));	//DEBUG
 		
 		//Rectangles are awkward: They start at bottom left.
-		playRect = new Rectangle(304, manager.getHeight() - (612 + 240), 687, 240);
-		optionsRect = new Rectangle(304, manager.getHeight() - (994 + 240), 687, 240);
-		creditsRect = new Rectangle(304, manager.getHeight() - (1355 + 240), 687, 240);
+		playRect = new Rectangle(162, manager.getHeight() - (326 + 128), 366, 128);
+		optionsRect = new Rectangle(162, manager.getHeight() - (530 + 128), 366, 128);
+		creditsRect = new Rectangle(162, manager.getHeight() - (723 + 128), 612, 128);
 	}
 
 	@Override

@@ -25,9 +25,9 @@ public class OptionsState extends BasicState {
 		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));
 
 		//Calculate button textures.
-		musicRect = new Rectangle(304, manager.getHeight() - (612 + 240), 687, 240);
-		soundRect = new Rectangle(304, manager.getHeight() - (994 + 240), 687, 240);
-		backRect = new Rectangle(304, manager.getHeight() - (1355 + 240), 687, 240);
+		musicRect = new Rectangle(162, manager.getHeight() - (326 + 128), 367, 128);
+		soundRect = new Rectangle(162, manager.getHeight() - (530 + 128), 367, 128);
+		backRect = new Rectangle(162, manager.getHeight() - (723 + 128), 612, 128);
 
 		//Set booleans (more efficient than constantly retrieving from prefs)
 		music = manager.getPrefs().getBoolean("music", true);

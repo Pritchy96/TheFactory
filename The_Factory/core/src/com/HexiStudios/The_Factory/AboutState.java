@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 public class AboutState extends BasicState {
 
 	private SpriteBatch batch;
-	private int  textScale = 4;
+	private int  textScale = 2;
 	TextBounds line1Bounds, line2Bounds, line3Bounds, line4Bounds, line5Bounds;
 	String line1, line2, line3, line4, line5;
 	//Separate font instances so the .getbound method works (libgtx is bugged)
@@ -52,7 +52,7 @@ public class AboutState extends BasicState {
 	public void drawGUI() {	
 		//How far down the page to draw each line.
 		//Is further offset for the second line so it is drawn under the first and so on.
-		int lineOffsetY = manager.getHeight() - 600;		
+		int lineOffsetY = manager.getHeight() - 320;		
 
 		manager.getFont().draw(batch, line1, (manager.getWidth()/2) - (line1Bounds.width/2), lineOffsetY);	
 

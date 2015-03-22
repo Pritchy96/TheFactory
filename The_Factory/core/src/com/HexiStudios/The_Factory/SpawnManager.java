@@ -19,7 +19,7 @@ public class SpawnManager {
 	{
 		if(TimeUtils.nanosToMillis(TimeUtils.nanoTime()) - lastSpawnTime > timeBetweenProducts)
 		{
-			mainstate.getProducts().add(new Product(productTex, 604)); 
+			mainstate.getProducts().add(new Product(productTex, 322)); 
 			lastSpawnTime = TimeUtils.nanosToMillis(TimeUtils.nanoTime());
 			
 			float longestSpawnPanicked = longestSpawn - (mainstate.getPanicCounter() * 20);
