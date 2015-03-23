@@ -10,57 +10,68 @@ import com.badlogic.gdx.math.Vector3;
 
 public class MainState extends BasicState {
 
-	private Texture leftPlayerTex,  rightPlayerTex, backgroundF1Tex, backgroundF2Tex;
+	private Texture leftPlayerTex,  rightPlayerTex, backgroundF1Tex, backgroundF2Tex, candyDropTex;
 	private SpriteBatch batch;
 	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3, passes = 0, panicCounter = 0;
 	//Default value for Right (Changed in Constructor)
-	private float leftX = 0, rightX = 107, leftEdge = 171, rightEdge = 510, platformGap = 158, bottomOffset = 129, animTimer = 0.3f;	   
+	private float leftX = 0, rightX = 107, leftEdge = 171, rightEdge = 510, platformGap = 161, bottomOffset = 129, backgroundAnimTimer = 0.3f;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
-	private boolean animBool = false, sound;
+	private boolean backgroundAnimBool = false, sound;
 	private SpawnManager spawnManager = new SpawnManager(this);
-	
-	
+	private float[] candyDropTimers = new float[6];
+
 
 	public MainState(Manager manager)  {
 		super(manager);
 
 		//Load the images.
-		leftPlayerTex = new Texture(Gdx.files.internal("droid_left.png"));
-		rightPlayerTex = new Texture(Gdx.files.internal("droid_right.png"));
-		backgroundF1Tex = new Texture(Gdx.files.internal("backgroundFrame1.png"));		   	      
+		leftPlayerTex = new Texture(Gdx.files.internal("armLeft.png"));
+		rightPlayerTex = new Texture(Gdx.files.internal("armRight.png"));
+		backgroundF1Tex = new Texture(Gdx.files.internal("backgroundFrame1.png"));
 		backgroundF2Tex = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
+		candyDropTex = new Texture(Gdx.files.internal("droppingCandy.png"));
 		rightX = 683 - rightPlayerTex.getWidth();
-		
+
 		sound = manager.getPrefs().getBoolean("sound", true);
 		highscore = manager.getPrefs().getInteger("highscore", 0);
 		batch = manager.getBatch();
-		
+
 		//Load add ready for game over screen
 		manager.getAdHandler().LoadInterstital();
-		
+
 		manager.getCamera().setToOrtho(false, 1000, 1000);
 		manager.getCamera().setToOrtho(false, 683, 1023);
 	}
 
 	@Override
 	public void draw() {
+		//batch.draw(backgroundF2Tex, 0, 0);
 
-			batch.draw(backgroundF1Tex, 0, 0);
-			
-			if (!animBool)
-			{
+		batch.draw(backgroundF1Tex, 0, 0);
+
+		if (!backgroundAnimBool)
+		{
 			batch.draw(backgroundF2Tex, 0, 0);
 		}
-		
+
 		batch.draw(leftPlayerTex, leftX, bottomOffset + (leftLevel * platformGap));
 		batch.draw(rightPlayerTex, rightX, bottomOffset + (rightLevel * platformGap));
-
 		Iterator<Product> iter = products.iterator();
 		while(iter.hasNext()) {
 			Product p = iter.next();
-			batch.draw(p.bitmap, p.xPosition, ((bottomOffset + (platformGap * p.level))));
+			p.Draw(batch, this);
 		}
-		
+
+		//Draw candy drop animations
+		//Candy Droppers
+		for (int i = 0; i < numberOfLevels; i++)
+		{
+			if (candyDropTimers[i] > 0)
+			{
+				batch.draw(candyDropTex, 333, 190 - 26 + (platformGap * i));
+			}
+		}
+
 		super.draw();
 	}
 
@@ -76,23 +87,23 @@ public class MainState extends BasicState {
 
 		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1Tex.getWidth() - 115, backgroundF1Tex.getHeight() - 6);
 		super.drawGUI();
-	}   
+	}
 
 	@Override
 	public void update() {
-		
+
 		//Spawn products if ready.
 		spawnManager.Update();
-		
+
 		//Move products along, check they're not supposed to be falling.
 		updateProducts();
-		
+
 		//Reduce frame timer and change frame if needed.
 		animHandler();
 
 		//Reset game if lives < 1.
 		checkLives();
-		
+
 		//float pitch = (((float)score)  / 10000)*4;
 		//manager.getBgm().setPitch(0, 0.7f + pitch);
 		super.update();
@@ -106,7 +117,7 @@ public class MainState extends BasicState {
 			Product p = iter.next();
 
 			//Check its not at end
-			if (p.vector < 0 && p.xPosition < leftEdge - p.bitmap.getWidth()/2)
+			if (p.vector < 0 && p.xPosition < leftEdge - p.emptyTex.getWidth()/2)
 			{
 				if (leftLevel == p.level)
 				{
@@ -118,7 +129,7 @@ public class MainState extends BasicState {
 						p.vector = -p.vector;
 						p.timeLeft = p.totalTimeLeft;
 						if (sound) {manager.getMoveUpSound().play();};
-						
+
 					}
 					else	//At the top, being removed.
 					{
@@ -146,7 +157,7 @@ public class MainState extends BasicState {
 				}
 			}
 			//Same as above but for the Right side.
-			else if (p.vector > 0 && p.xPosition > rightEdge - p.bitmap.getWidth()/2)
+			else if (p.vector > 0 && p.xPosition > rightEdge - p.emptyTex.getWidth()/2)
 			{
 				if (rightLevel == p.level)
 				{
@@ -178,19 +189,37 @@ public class MainState extends BasicState {
 				//Move Product.
 				p.xPosition += p.vector * 3 * (1/(Gdx.graphics.getDeltaTime()*40));
 			}
+
+
+			if (p.xPosition > 305 && p.xPosition < 340 && p.fill == p.level)
+			{
+				//Add 300ms to anim timer.
+				candyDropTimers[p.level] += 0.075f;
+				p.fill++;
+			}
 		}
 	}
 
 	public void animHandler ()
 	{
-		animTimer -= Gdx.graphics.getDeltaTime();
-		if (animTimer <= 0)
+		//background.
+		backgroundAnimTimer -= Gdx.graphics.getDeltaTime();
+		if (backgroundAnimTimer <= 0)
 		{
-			animTimer = 0.2f;
-			animBool = !animBool;
+			backgroundAnimTimer = 0.2f;
+			backgroundAnimBool = !backgroundAnimBool;
+		}
+
+		//Candy Droppers
+		for (int i = 0; i <= numberOfLevels; i++)
+		{
+			if (candyDropTimers[i] > 0)
+			{
+				candyDropTimers[i] -= Gdx.graphics.getDeltaTime();
+			}
 		}
 	}
-	
+
 	public void checkLives()
 	{
 		if (lives < 1)
@@ -212,10 +241,10 @@ public class MainState extends BasicState {
 			score = 0;
 			manager.getBgm().stop();
 			manager.getBgm().loop(1f, 0.7f, 0f);
-			
+
 			rightLevel = 0;
 			leftLevel = 1;
-			*/
+			 */
 		}
 	}
 
@@ -293,9 +322,9 @@ public class MainState extends BasicState {
 	@Override
 
 	public void dispose() {
-		
-		
-		
+
+
+
 		super.dispose();
 	}
 
@@ -311,14 +340,14 @@ public class MainState extends BasicState {
 		manager.getPrefs().putInteger("score", score);
 		manager.getPrefs().putInteger("passes", passes);
 		manager.getPrefs().putInteger("lives", lives);
-		
+
 		if (score > highscore)
 		{
 			manager.getPrefs().putInteger("highscore", score);
 		}
-		
+
 		super.pause();
-		
+
 	}
 
 	@Override
@@ -332,42 +361,58 @@ public class MainState extends BasicState {
 			passes = manager.getPrefs().getInteger("passes", score);
 			lives = manager.getPrefs().getInteger("lives", 0);
 		}
-		
+
 		//Load add ready for game over screen (might unload on pause?)
 		manager.getAdHandler().LoadInterstital();
 	}
 
-public int getPasses() {
-	return passes;
-}
+	public int getPasses() {
+		return passes;
+	}
 
-public void setPasses(int passes) {
-	this.passes = passes;
-}
+	public void setPasses(int passes) {
+		this.passes = passes;
+	}
 
-public ArrayList<Product> getProducts() {
-	return products;
-}
+	public ArrayList<Product> getProducts() {
+		return products;
+	}
 
-public void setProducts(ArrayList<Product> products) {
-	this.products = products;
-}
+	public void setProducts(ArrayList<Product> products) {
+		this.products = products;
+	}
 
-public int getScore() {
-	return score;
-}
+	public int getScore() {
+		return score;
+	}
 
-public void setScore(int score) {
-	this.score = score;
-}
+	public void setScore(int score) {
+		this.score = score;
+	}
 
-public int getPanicCounter() {
-	return panicCounter;
-}
+	public int getPanicCounter() {
+		return panicCounter;
+	}
 
-public void setPanicCounter(int panicCounter) {
-	this.panicCounter = panicCounter;
-}
+	public void setPanicCounter(int panicCounter) {
+		this.panicCounter = panicCounter;
+	}
+
+	public float getPlatformGap() {
+		return platformGap;
+	}
+
+	public void setPlatformGap(float platformGap) {
+		this.platformGap = platformGap;
+	}
+
+	public float getBottomOffset() {
+		return bottomOffset;
+	}
+
+	public void setBottomOffset(float bottomOffset) {
+		this.bottomOffset = bottomOffset;
+	}
 }
 
 /*

@@ -8,7 +8,6 @@ import com.badlogic.gdx.utils.TimeUtils;
 public class SpawnManager {
 	private MainState mainstate;
 	private float timeBetweenProducts = 10000, lastSpawnTime = 3000, longestSpawn = 6000, shortestSpawn  = 500;
-	private Texture productTex = new Texture(Gdx.files.internal("product.png"));
 
 	public SpawnManager(MainState mainstate)
 	{
@@ -19,7 +18,7 @@ public class SpawnManager {
 	{
 		if(TimeUtils.nanosToMillis(TimeUtils.nanoTime()) - lastSpawnTime > timeBetweenProducts)
 		{
-			mainstate.getProducts().add(new Product(productTex, 322)); 
+			mainstate.getProducts().add(new Product(322)); 
 			lastSpawnTime = TimeUtils.nanosToMillis(TimeUtils.nanoTime());
 			
 			float longestSpawnPanicked = longestSpawn - (mainstate.getPanicCounter() * 20);
