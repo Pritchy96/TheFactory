@@ -10,7 +10,7 @@ public class MenuState extends BasicState {
 
 	private SpriteBatch batch;
 	Texture buttons, debugRect;	//DEBUG
-	private Rectangle playRect, howRect, optionsRect, creditsRect;
+	private Rectangle playRect, optionsRect, creditsRect;
 
 	public MenuState(Manager manager)  {
 		super(manager);	      
@@ -21,10 +21,9 @@ public class MenuState extends BasicState {
 		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));	//DEBUG
 		
 		//Rectangles are awkward: They start at bottom left.
-		playRect = new Rectangle(162, manager.getHeight() - (270 + 128), 366, 128);
-		howRect = new Rectangle(162, manager.getHeight() - (454 + 128), 366, 128);
-		optionsRect = new Rectangle(162, manager.getHeight() - (638 + 128), 366, 128);
-		creditsRect = new Rectangle(162, manager.getHeight() - (822 + 128), 612, 128);
+		playRect = new Rectangle(162, manager.getHeight() - (326 + 128), 366, 128);
+		optionsRect = new Rectangle(162, manager.getHeight() - (530 + 128), 366, 128);
+		creditsRect = new Rectangle(162, manager.getHeight() - (723 + 128), 612, 128);
 	}
 
 	@Override
@@ -58,10 +57,6 @@ public class MenuState extends BasicState {
 		if (playRect.contains(point))
 		{
 			manager.changeState(new MainState(manager));
-		}
-		else if(howRect.contains(point))
-		{
-			manager.changeState(new HowToPlayState(manager));
 		}
 		else if(optionsRect.contains(point))
 		{
