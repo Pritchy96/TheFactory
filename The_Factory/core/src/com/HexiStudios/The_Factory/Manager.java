@@ -19,7 +19,7 @@ public class Manager extends ApplicationAdapter {
 	private BitmapFont font;
 	private BasicState currentState;
 	//private Sound bgm;
-	private Sound moveUpSound;
+	private Sound moveUpSound, deploySound, failSound;
 	private Music bgMusic;
 	private Preferences prefs;
 	private Texture background, scrollingBackground;
@@ -48,6 +48,8 @@ public class Manager extends ApplicationAdapter {
 		batch.setProjectionMatrix(camera.combined);
 		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("bgm.ogg"));
 		moveUpSound = Gdx.audio.newSound(Gdx.files.internal("moveUp.ogg")); 
+		deploySound = Gdx.audio.newSound(Gdx.files.internal("deploy.ogg")); 
+		failSound = Gdx.audio.newSound(Gdx.files.internal("fail.ogg")); 
 		background = new Texture(Gdx.files.internal("background.png"));
 		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
 		width = background.getWidth();
@@ -225,6 +227,14 @@ public class Manager extends ApplicationAdapter {
 
 	public ActionResolver getAdHandler() {
 		return adHandler;
+	}
+
+	public Sound getDeploySound() {
+		return deploySound;
+	}
+
+	public Sound getFailSound() {
+		return failSound;
 	}
 }
 

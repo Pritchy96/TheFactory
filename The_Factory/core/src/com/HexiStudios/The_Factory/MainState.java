@@ -10,11 +10,11 @@ import com.badlogic.gdx.math.Vector3;
 
 public class MainState extends BasicState {
 
-	private Texture leftPlayerTex,  rightPlayerTex, backgroundF1Tex, backgroundF2Tex, candyDropTex;
+	private Texture leftPlayerTex,  rightPlayerTex, backgroundF1Tex, backgroundF2Tex, candyDropTex, fallingProductTex;
 	private SpriteBatch batch;
 	private int leftLevel = 1, rightLevel = 0, numberOfLevels = 5, score = 0, highscore= 0, lives = 3, passes = 0, panicCounter = 0;
 	//Default value for Right (Changed in Constructor)
-	private float leftX = 0, rightX = 107, leftEdge = 171, rightEdge = 510, platformGap = 161, bottomOffset = 129, backgroundAnimTimer = 0.3f;	   
+	private float leftX = 0, rightX = 107, leftEdge = 150, rightEdge = 531, platformGap = 161, bottomOffset = 129, backgroundAnimTimer = 0.3f, pauseTimer = 0f, fallingAnimY = 0, fallingAnimX = 0;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
 	private boolean backgroundAnimBool = false, sound;
 	private SpawnManager spawnManager = new SpawnManager(this);
@@ -23,13 +23,13 @@ public class MainState extends BasicState {
 
 	public MainState(Manager manager)  {
 		super(manager);
-
 		//Load the images.
 		leftPlayerTex = new Texture(Gdx.files.internal("armLeft.png"));
 		rightPlayerTex = new Texture(Gdx.files.internal("armRight.png"));
 		backgroundF1Tex = new Texture(Gdx.files.internal("backgroundFrame1.png"));
 		backgroundF2Tex = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
 		candyDropTex = new Texture(Gdx.files.internal("droppingCandy.png"));
+		fallingProductTex = new Texture(Gdx.files.internal("productFalling.png"));
 		rightX = 683 - rightPlayerTex.getWidth();
 
 		sound = manager.getPrefs().getBoolean("sound", true);
@@ -71,6 +71,11 @@ public class MainState extends BasicState {
 				batch.draw(candyDropTex, 333, 190 - 26 + (platformGap * i));
 			}
 		}
+		
+		if (pauseTimer > 0)
+		{
+			batch.draw(fallingProductTex, fallingAnimX, fallingAnimY);
+		}
 
 		super.draw();
 	}
@@ -92,21 +97,33 @@ public class MainState extends BasicState {
 	@Override
 	public void update() {
 
-		//Spawn products if ready.
-		spawnManager.Update();
-
-		//Move products along, check they're not supposed to be falling.
-		updateProducts();
-
-		//Reduce frame timer and change frame if needed.
-		animHandler();
-
-		//Reset game if lives < 1.
-		checkLives();
-
-		//float pitch = (((float)score)  / 10000)*4;
-		//manager.getBgm().setPitch(0, 0.7f + pitch);
-		super.update();
+		if (pauseTimer <= 0)
+		{
+			//Spawn products if ready.
+			spawnManager.Update();
+	
+			//Move products along, check they're not supposed to be falling.
+			updateProducts();
+	
+			//Reduce frame timer and change frame if needed.
+			animHandler();
+	
+			//float pitch = (((float)score)  / 10000)*4;
+			//manager.getBgm().setPitch(0, 0.7f + pitch);
+			super.update();
+		} 
+		else
+		{
+			if ((pauseTimer -= Gdx.graphics.getDeltaTime()) <= 0)
+			{
+				//Return to normal
+				//End game if lives < 1.
+				checkLives();
+				manager.setMusic();
+			}
+			pauseTimer -= Gdx.graphics.getDeltaTime();
+			fallingAnimY-=10;
+		}
 	}
 
 	public void updateProducts()
@@ -152,7 +169,9 @@ public class MainState extends BasicState {
 					else	//Fall, lose a life!
 					{
 						iter.remove();
-						lives--;
+						loseLife(p);
+						break;
+						
 					} 	
 				}
 			}
@@ -171,7 +190,7 @@ public class MainState extends BasicState {
 				}
 				else
 				{
-					if (p.timeLeft > 0)
+					if (p.timeLeft > 0)	//Fall Timer
 					{
 						p.timeLeft -= Gdx.graphics.getDeltaTime();
 
@@ -179,8 +198,8 @@ public class MainState extends BasicState {
 					else
 					{
 						iter.remove();
-						panicCounter = 0;
-						lives--;
+						loseLife(p);
+						break;
 					} 	
 				}
 			}
@@ -198,6 +217,27 @@ public class MainState extends BasicState {
 				p.fill++;
 			}
 		}
+	}
+	
+	public void loseLife(Product p)
+	{
+		lives--;	
+		//Makes products spawn slower again so player can start again.
+		panicCounter = 0;
+		//Pauses game to give player a break and see what fell.
+		pauseTimer += 1f;
+		//Setting up falling animation
+		fallingAnimX = p.xPosition;
+		fallingAnimY = (bottomOffset - p.halfTex.getHeight() + (platformGap * p.level));
+		
+		manager.getBgm().stop();
+		
+		if (sound)
+		{
+			manager.getFailSound().play();
+		}
+		//Destroys all products so player can start again.
+		products.clear();
 	}
 
 	public void animHandler ()
@@ -249,74 +289,79 @@ public class MainState extends BasicState {
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
-		// process user input
-		Vector3 touchPos = new Vector3();
-		touchPos.set(screenX, screenY, 0);
-		manager.getCamera().unproject(touchPos);
 
-		if (touchPos.x > 683/2)
+		if (pauseTimer <= 0)
 		{
-			if (touchPos.y < 1024/2)
+			Vector3 touchPos = new Vector3();
+			touchPos.set(screenX, screenY, 0);
+			manager.getCamera().unproject(touchPos);
+	
+			if (touchPos.x > 683/2)
 			{
-				//Bottom Right tap.
-				if (rightLevel > 0)
+				if (touchPos.y < 1024/2)
 				{
-					rightLevel-=2;
+					//Bottom Right tap.
+					if (rightLevel > 0)
+					{
+						rightLevel-=2;
+					}
+				}
+				else
+				{
+					//Top Right tap.
+					if (rightLevel < numberOfLevels-1)
+					{
+						rightLevel+=2;
+					}
 				}
 			}
 			else
 			{
-				//Top Right tap.
-				if (rightLevel < numberOfLevels-1)
+				if (touchPos.y < 1024/2)
 				{
-					rightLevel+=2;
+	
+					//Bottom Left tap.
+					if (leftLevel > 1)
+					{
+						leftLevel-=2;
+					}
+				}
+				else
+				{
+					//Top Left tap.
+					if (leftLevel < numberOfLevels)
+					{
+						leftLevel+=2;
+					}
 				}
 			}
+			super.touchDown(screenX, screenY, pointer, button);
 		}
-		else
-		{
-			if (touchPos.y < 1024/2)
-			{
-
-				//Bottom Left tap.
-				if (leftLevel > 1)
-				{
-					leftLevel-=2;
-				}
-			}
-			else
-			{
-				//Top Left tap.
-				if (leftLevel < numberOfLevels)
-				{
-					leftLevel+=2;
-				}
-			}
-		}
-		super.touchDown(screenX, screenY, pointer, button);
 	}
 
 	public void keyDown(int keycode) {
-
-		//LeftUp
-		if (keycode == com.badlogic.gdx.Input.Keys.W)
+		if (pauseTimer <= 0)
 		{
-			if (leftLevel < numberOfLevels) {leftLevel+=2;}	
+			//LeftUp
+			if (keycode == com.badlogic.gdx.Input.Keys.W)
+			{
+				if (leftLevel < numberOfLevels) {leftLevel+=2;}	
+			}
+			else if (keycode == com.badlogic.gdx.Input.Keys.S)
+			{
+				if (leftLevel > 1) {leftLevel-=2;}
+			}
+			else if (keycode == com.badlogic.gdx.Input.Keys.UP)
+			{
+				if (rightLevel < (numberOfLevels-1)) {rightLevel+=2;}
+			}
+			else if (keycode == com.badlogic.gdx.Input.Keys.DOWN)
+			{
+				if (rightLevel > 0) {rightLevel-=2;}
+			}
+	
+			super.keyDown(keycode);
 		}
-		else if (keycode == com.badlogic.gdx.Input.Keys.S)
-		{
-			if (leftLevel > 1) {leftLevel-=2;}
-		}
-		else if (keycode == com.badlogic.gdx.Input.Keys.UP)
-		{
-			if (rightLevel < (numberOfLevels-1)) {rightLevel+=2;}
-		}
-		else if (keycode == com.badlogic.gdx.Input.Keys.DOWN)
-		{
-			if (rightLevel > 0) {rightLevel-=2;}
-		}
-
-		super.keyDown(keycode);
 	}
 
 	@Override
