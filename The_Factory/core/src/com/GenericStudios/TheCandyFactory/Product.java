@@ -1,4 +1,4 @@
-package com.HexiStudios.The_Factory;
+package com.GenericStudios.TheCandyFactory;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;

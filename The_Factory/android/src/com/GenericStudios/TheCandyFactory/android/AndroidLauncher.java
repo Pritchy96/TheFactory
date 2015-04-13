@@ -1,4 +1,4 @@
-package com.HexiStudios.The_Factory.android;
+package com.GenericStudios.TheCandyFactory.android;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,17 +9,22 @@ import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
-import com.HexiStudios.The_Factory.ActionResolver;
-import com.HexiStudios.The_Factory.Manager;
+import com.google.android.gms.games.Games;
+import com.google.example.games.basegameutils.GameHelper;
+import com.google.example.games.basegameutils.GameHelper.GameHelperListener;
+import com.GenericStudios.TheCandyFactory.ActionResolver;
+import com.GenericStudios.TheCandyFactory.Manager;
 
-public class AndroidLauncher extends AndroidApplication implements ActionResolver {
+public class AndroidLauncher extends AndroidApplication implements GameHelperListener, ActionResolver {
 
-	private static final String AD_UNIT_ID_INTERSTITIAL = "ca-app-pub-6916351754834612/3808499421";
+	private static final String AD_UNIT_ID_INTERSTITIAL = "ca-app-pub-4452611104193317/8256044384";
 	//private static final String GOOGLE_PLAY_URL = "https://play.google.com/store/apps/developer?id=TheInvader360";
 	//private static final String GITHUB_URL = "https://github.com/TheInvader360";
 	//private static final String BLOG_URL = "http://theinvader360.blogspot.co.uk/";
 	protected View gameView;
 	private InterstitialAd interstitialAd;
+	private GameHelper gameHelper;
+	
 
 	@Override
 	protected void onCreate (Bundle savedInstanceState) {
@@ -28,10 +33,17 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 		config.useAccelerometer = false;
 		config.useCompass = false;
 
+		initialize(new Manager(this), config);
+		
 		interstitialAd = new InterstitialAd(this);
 		interstitialAd.setAdUnitId(AD_UNIT_ID_INTERSTITIAL);
-
-
+			
+	    if (gameHelper == null) {
+	        gameHelper = new GameHelper(this, GameHelper.CLIENT_GAMES);
+	        gameHelper.enableDebugLog(true);
+	      }
+	      gameHelper.setup(this);
+	  
 
 		interstitialAd.setAdListener(new AdListener() {
 			@Override
@@ -45,7 +57,7 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 			}
 		});
 
-		initialize(new Manager(this), config);
+		loginGPGS();
 	}
 
 	@Override
@@ -76,6 +88,75 @@ public class AndroidLauncher extends AndroidApplication implements ActionResolve
 				}
 			}
 		});		
+	}
+
+	@Override
+	public boolean getSignedInGPGS() {
+		// TODO Auto-generated method stub
+		return gameHelper.isSignedIn();
+		//return false;
+	}
+
+	@Override
+	public void loginGPGS() {
+		try {
+			runOnUiThread(new Runnable(){
+				public void run() {
+					gameHelper.beginUserInitiatedSignIn();
+				}
+			});
+		} catch (final Exception ex) {
+		}
+	}
+
+	@Override
+	public void submitScoreGPGS(int score) {
+		// TODO Auto-generated method stub
+			
+		if (gameHelper.isSignedIn()) 
+		{
+			
+			Games.Leaderboards.submitScore(gameHelper.getApiClient(), "CgkI17WurtcMEAIQAg", score);
+			
+		}
+		else if (!gameHelper.isConnecting()) 
+		{
+			loginGPGS();
+		}
+	}
+
+	@Override
+	public void unlockAchievementGPGS(String achievementId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void getLeaderboardGPGS() {
+		  if (gameHelper.isSignedIn()) {
+			  	startActivityForResult(Games.Leaderboards.getLeaderboardIntent(gameHelper.getApiClient(), "CgkI17WurtcMEAIQAg"), 100);
+			  }
+			  else if (!gameHelper.isConnecting()) {
+			    loginGPGS();
+			  }
+	}
+
+	@Override
+	public void getAchievementsGPGS() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSignInFailed() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSignInSucceeded() {
+		// TODO Auto-generated method stub
+		
 	}
 }
 

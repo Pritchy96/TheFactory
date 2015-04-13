@@ -1,122 +1,243 @@
-package com.HexiStudios.The_Factory;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
+package com.GenericStudios.TheCandyFactory;
+
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class AboutState extends BasicState {
+public class Manager extends ApplicationAdapter {
 
 	private SpriteBatch batch;
-	private int  textScale = 2;
-	TextBounds line1Bounds, line2Bounds, line3Bounds, line4Bounds, line5Bounds;
-	String line1, line2, line3, line4, line5;
-	//Separate font instances so the .getbound method works (libgtx is bugged)
-	BitmapFont font1 = new BitmapFont(), font2 = new BitmapFont(), font3 = new BitmapFont(), font4 = new BitmapFont(), font5 = new BitmapFont();
+	private OrthographicCamera camera;
+	private Input inputProcessor;
+	private BitmapFont font;
+	private BasicState currentState;
+	//private Sound bgm;
+	private Sound moveUpSound, deploySound, failSound;
+	private Music bgMusic;
+	private Preferences prefs;
+	private Texture background, scrollingBackground;
+	private int width, height, scrollY = 0; //Y pos of falling cake image.
+	private ActionResolver actionResolver;
 
-	public AboutState(Manager manager)  {
-		super(manager);	
-
-		//Show advertisement.
-		//manager.getAdHandler().ShowInterstital();
-
-		batch = manager.getBatch();
-
-		//Set text.
-		line1 = "Version 0.9.0 (Development Build)";
-		line2 = "Developed by Tom Pritchard";
-		line3 = "Music by Kevin Macleod";
-		line4 = "(incompetech.com)";
-		line5 = "Tap to return!";
-		
-		font1.setScale(textScale);
-		font2.setScale(textScale);
-		font3.setScale(textScale);
-		font4.setScale(textScale);
-		font5.setScale(textScale);
-		manager.getFont().setScale(textScale);
-
-		line1Bounds = font1.getBounds(line1);
-		line2Bounds = font2.getBounds(line2);
-		line3Bounds = font3.getBounds(line3);
-		line4Bounds = font4.getBounds(line4);
-		line5Bounds = font5.getBounds(line5);
+	
+	
+	public Manager(ActionResolver AdHandler)
+	{
+		actionResolver = AdHandler;
 	}
 
 	@Override
-	public void draw() {
-		super.draw();
+	public void create() {
+		inputProcessor=  new Input(this);
+		Gdx.input.setInputProcessor(inputProcessor);	   
+		prefs = Gdx.app.getPreferences("Preferences");
+		setFont(new BitmapFont());
+
+		// create the camera and the SpriteBatch
+		setCamera(new OrthographicCamera());
+		camera.setToOrtho(false, 683, 1024);
+		
+		setBatch(new SpriteBatch());
+		batch.setProjectionMatrix(camera.combined);
+		bgMusic = Gdx.audio.newMusic(Gdx.files.internal("bgm.ogg"));
+		moveUpSound = Gdx.audio.newSound(Gdx.files.internal("moveUp.ogg")); 
+		deploySound = Gdx.audio.newSound(Gdx.files.internal("deploy.ogg")); 
+		failSound = Gdx.audio.newSound(Gdx.files.internal("fail.ogg")); 
+		background = new Texture(Gdx.files.internal("background.png"));
+		scrollingBackground = new Texture(Gdx.files.internal("scrollingBack.png"));
+		width = background.getWidth();
+		height = background.getHeight();
+
+		currentState = new LogoState(this); 
+		setMusic();
 	}
 
 	@Override
-	public void drawGUI() {	
-		//How far down the page to draw each line.
-		//Is further offset for the second line so it is drawn under the first and so on.
-		int lineOffsetY = manager.getHeight() - 320;		
+	public void render() {
+		// clear the screen with Black.
+		Gdx.gl.glClearColor(0, 0, 0f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		manager.getFont().draw(batch, line1, (manager.getWidth()/2) - (line1Bounds.width/2), lineOffsetY);	
+		//Tell the camera to update its matrices.
+		camera.update();
+		currentState.update();
 
-		lineOffsetY -= (int) (manager.getFont().getLineHeight()*2);
-		manager.getFont().draw(batch, line2, (manager.getWidth()/2 ) - (line2Bounds.width/2), lineOffsetY);	
+		if (prefs.getBoolean("music", false) == false)
+		{
+			bgMusic.stop();
+		}
 
-		lineOffsetY -= (int) (manager.getFont().getLineHeight()* 2);
-		manager.getFont().draw(batch, line3, (manager.getWidth()/2) - (line3Bounds.width/2), lineOffsetY);	
+		//Tell the SpriteBatch to render in the
+		//coordinate system specified by the camera, for game drawing.
+		batch.setProjectionMatrix(getCamera().combined);
+		//Game Drawing
+		batch.begin();
+		//Draw background (for all screens)
 		
-		lineOffsetY -= (int) (manager.getFont().getLineHeight());
-		manager.getFont().draw(batch, line4, (manager.getWidth()/2) - (line4Bounds.width/2), lineOffsetY);	
 		
-		lineOffsetY -= (int) 8*(manager.getFont().getLineHeight());
-		manager.getFont().draw(batch, line5, (manager.getWidth()/2) - (line5Bounds.width/2), lineOffsetY);	
 		
-		super.drawGUI();
-	}   
+		//if it's not the game state, draw the falling cakes.
+		if ((!(currentState instanceof MainState) && !(currentState instanceof LogoState)))
+		{
+		batch.draw(background, 0, 0, width, height);
+		batch.draw(scrollingBackground, 0, scrollY);
+		batch.draw(scrollingBackground, 0, scrollY + scrollingBackground.getHeight());
+		
+		if (scrollY < -scrollingBackground.getHeight())
+			scrollY = 0;
+		else
+			scrollY -= 8;
+		}
+		
+		currentState.draw();
+		batch.end();
 
-	@Override
-	public void update() {
-		super.update();
+		//GUI Drawing
+		batch.begin();
+		currentState.drawGUI();
+		batch.end();
+	}
+
+	public void setMusic()
+	{
+		if (prefs.getBoolean("music", false) == false)
+		{
+			bgMusic.stop();
+		}
+		else
+		{
+			//bgm.loop(1f, 0.7f, 0f);
+			bgMusic.play();
+			bgMusic.setLooping(true);
+		}
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
-		// process user input
-		Vector3 touchPos = new Vector3();
-		touchPos.set(screenX, screenY, 0);
-		manager.getCamera().unproject(touchPos);
-		Vector2 point = new Vector2(touchPos.x, touchPos.y);
-
-		manager.changeState(new MenuState(manager));
-		super.touchDown(screenX, screenY, pointer, button);
+		currentState.touchDown(screenX, screenY, pointer, button);
 	}
 
 	public void keyDown(int keycode) {
-
-		//LeftUp
-		if (keycode == com.badlogic.gdx.Input.Keys.W)
-		{
-		}
-
-		super.keyDown(keycode);
+		currentState.keyDown(keycode);
 	}
 
 	@Override
 	public void dispose() {
-		super.dispose();
+		currentState.dispose();
+		getBatch().dispose();
+		bgMusic.dispose();
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		super.resize(width, height);
+		
+		
+		currentState.resize(width, height);
+		camera.setToOrtho(false, 683, 1024);
+		batch.setProjectionMatrix(camera.combined);
 	}
 
 	@Override
 	public void pause() {
-		super.pause();
+		currentState.pause();
 	}
 
 	@Override
 	public void resume() {
-		super.resume();
+		currentState.resume();
+	}
+
+	public void changeState(BasicState state)
+	{
+		this.currentState = state; 
+		System.out.println(state.getClass().getName());
+	}
+
+	/**
+	 * @return the batch
+	 */
+	public SpriteBatch getBatch() {
+		return batch;
+	}
+
+	/**
+	 * @param batch the batch to set
+	 */
+	public void setBatch(SpriteBatch batch) {
+		this.batch = batch;
+	}
+
+	/**
+	 * @return the font
+	 */
+	public BitmapFont getFont() {
+		return font;
+	}
+
+	/**
+	 * @param font the font to set
+	 */
+	public void setFont(BitmapFont font) {
+		this.font = font;
+	}
+
+	/**
+	 * @return the camera
+	 */
+	public OrthographicCamera getCamera() {
+		return camera;
+	}
+
+	/**
+	 * @param camera the camera to set
+	 */
+	public void setCamera(OrthographicCamera camera) {
+		this.camera = camera;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public Music getBgm() {
+		return bgMusic;
+	}
+
+	public Sound getMoveUpSound() {
+		return moveUpSound;
+	}
+
+	public Preferences getPrefs() {
+		return prefs;
+	}
+
+	public void setPrefs(Preferences prefs) {
+		this.prefs = prefs;
+	}
+
+	public ActionResolver getActionResolver() {
+		return actionResolver;
+	}
+
+	public Sound getDeploySound() {
+		return deploySound;
+	}
+
+	public Sound getFailSound() {
+		return failSound;
 	}
 }
+
 
 
 /*

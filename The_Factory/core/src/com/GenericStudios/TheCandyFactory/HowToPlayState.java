@@ -1,61 +1,41 @@
-package com.HexiStudios.The_Factory;
-
+package com.GenericStudios.TheCandyFactory;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class OptionsState extends BasicState {
+public class HowToPlayState extends BasicState {
 
-	private Manager manager;
-	Texture background, buttons, scrollingBackground, musicOff, soundOff, debugRect;	//DEBUG
-	private Rectangle musicRect, soundRect, backRect;
-	boolean music, sound;
+	private SpriteBatch batch;
+	private int picture = 0, textScale = 3;
+	private Texture one = new Texture(Gdx.files.internal("tutorialOne.png"));
+	private Texture two = new Texture(Gdx.files.internal("tutorialTwo.png"));
 
-	public OptionsState(Manager manager)  {
-		super(manager);	      
-		this.manager = manager;
-
-		//Load textures
-		buttons  = new Texture(Gdx.files.internal("optionsButtons.png"));
-		musicOff = new Texture(Gdx.files.internal("optionsMusicOffBtn.png"));
-		soundOff  = new Texture(Gdx.files.internal("optionsSoundOffBtn.png"));
-		//DEBUG
-		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));
-
-		//Calculate button textures.
-		musicRect = new Rectangle(162, manager.getHeight() - (326 + 128), 367, 128);
-		soundRect = new Rectangle(162, manager.getHeight() - (530 + 128), 367, 128);
-		backRect = new Rectangle(162, manager.getHeight() - (723 + 128), 612, 128);
-
-		//Set booleans (more efficient than constantly retrieving from prefs)
-		music = manager.getPrefs().getBoolean("music", true);
-		sound = manager.getPrefs().getBoolean("sound", true);
+	public HowToPlayState(Manager manager)  {
+		super(manager);	
+		batch = manager.getBatch();
 	}
 
 	@Override
 	public void draw() {
-		manager.getBatch().draw(buttons, 0, 0);
-
-		if (!music)
+		
+		if (picture == 0)
 		{
-			manager.getBatch().draw(musicOff, musicRect.x, musicRect.y, musicRect.width, musicRect.height);
+			batch.draw(one, 0, 0);
 		}
-
-		if (!sound)
+		else 
 		{
-			manager.getBatch().draw(soundOff, soundRect.x, soundRect.y, soundRect.width, soundRect.height);
+			batch.draw(two, 0, 0);
 		}
-
-
-
 		super.draw();
 	}
 
-	@Override 
-	public void drawGUI() {
-		manager.getFont().setScale(4);
+	@Override
+	public void drawGUI() {	
 		super.drawGUI();
 	}   
 
@@ -65,44 +45,23 @@ public class OptionsState extends BasicState {
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
-		Vector3 touchPos = new Vector3();
-		touchPos.set(screenX, screenY, 0);
-		manager.getCamera().unproject(touchPos);
-		Vector2 point = new Vector2(touchPos.x, touchPos.y);
-
-		if (musicRect.contains(point))
+		if (picture == 0)
 		{
-			music = !music;
-			manager.getPrefs().putBoolean("music", music);
-			manager.getPrefs().flush();
-			manager.setMusic();
+			picture++;
 		}
-		else if(soundRect.contains(point))
+		else
 		{
-			sound = !sound;
-			manager.getPrefs().putBoolean("sound", sound);
-			manager.getPrefs().flush();
-			
-			if (sound)
-			{
-				//Play sound to let user know sound is on.
-				manager.getMoveUpSound().play();
-			}
-		}
-		else if(backRect.contains(point))
-		{
-
 			manager.changeState(new MenuState(manager));
 		}
-
-		super.touchDown(screenX, screenY, pointer, button);
 	}
 
 	public void keyDown(int keycode) {
+
 		//LeftUp
 		if (keycode == com.badlogic.gdx.Input.Keys.W)
 		{
 		}
+
 		super.keyDown(keycode);
 	}
 

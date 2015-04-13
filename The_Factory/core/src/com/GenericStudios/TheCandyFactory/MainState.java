@@ -1,4 +1,4 @@
-package com.HexiStudios.The_Factory;
+package com.GenericStudios.TheCandyFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,7 +16,9 @@ public class MainState extends BasicState {
 	//Default value for Right (Changed in Constructor)
 	private float leftX = 0, rightX = 107, leftEdge = 150, rightEdge = 531, platformGap = 161, bottomOffset = 129, backgroundAnimTimer = 0.3f, pauseTimer = 0f, fallingAnimY = 0, fallingAnimX = 0;	   
 	private ArrayList<Product> products = new ArrayList<Product>();	   
-	private boolean backgroundAnimBool = false, sound;
+	private boolean backgroundAnimBool = false, sound = false, music= false;
+
+
 	private SpawnManager spawnManager = new SpawnManager(this);
 	private float[] candyDropTimers = new float[6];
 
@@ -30,14 +32,15 @@ public class MainState extends BasicState {
 		backgroundF2Tex = new Texture(Gdx.files.internal("backgroundFrame2.png"));	
 		candyDropTex = new Texture(Gdx.files.internal("droppingCandy.png"));
 		fallingProductTex = new Texture(Gdx.files.internal("productFalling.png"));
-		rightX = 683 - rightPlayerTex.getWidth();
+		rightX = 683 - rightPlayerTex.getWidth();    
 
 		sound = manager.getPrefs().getBoolean("sound", true);
+		music = manager.getPrefs().getBoolean("music", true);
 		highscore = manager.getPrefs().getInteger("highscore", 0);
 		batch = manager.getBatch();
 
 		//Load add ready for game over screen
-		manager.getAdHandler().LoadInterstital();
+		manager.getActionResolver().LoadInterstital();
 
 		manager.getCamera().setToOrtho(false, 1000, 1000);
 		manager.getCamera().setToOrtho(false, 683, 1023);
@@ -89,7 +92,7 @@ public class MainState extends BasicState {
 			manager.getFont().draw(batch, "High Score: " + Integer.toString(score), 20, backgroundF1Tex.getHeight() - 36);	
 		else
 			manager.getFont().draw(batch, "High Score: " + Integer.toString(highscore), 20, backgroundF1Tex.getHeight() - 36);	
-
+		
 		manager.getFont().draw(batch, "Lives: " + Integer.toString(lives), backgroundF1Tex.getWidth() - 115, backgroundF1Tex.getHeight() - 6);
 		super.drawGUI();
 	}
@@ -107,20 +110,21 @@ public class MainState extends BasicState {
 	
 			//Reduce frame timer and change frame if needed.
 			animHandler();
+			
+			if (music != manager.getBgm().isPlaying())
+			{
+				manager.setMusic();
+			}
+			
+			checkLives();
 	
 			//float pitch = (((float)score)  / 10000)*4;
 			//manager.getBgm().setPitch(0, 0.7f + pitch);
 			super.update();
 		} 
 		else
-		{
-			if ((pauseTimer -= Gdx.graphics.getDeltaTime()) <= 0)
-			{
-				//Return to normal
-				//End game if lives < 1.
-				checkLives();
-				manager.setMusic();
-			}
+		{	
+			manager.getBgm().stop();
 			pauseTimer -= Gdx.graphics.getDeltaTime();
 			fallingAnimY-=10;
 		}
@@ -221,7 +225,6 @@ public class MainState extends BasicState {
 	
 	public void loseLife(Product p)
 	{
-		lives--;	
 		//Makes products spawn slower again so player can start again.
 		panicCounter = 0;
 		//Pauses game to give player a break and see what fell.
@@ -238,6 +241,8 @@ public class MainState extends BasicState {
 		}
 		//Destroys all products so player can start again.
 		products.clear();
+	
+		lives--;
 	}
 
 	public void animHandler ()
@@ -408,7 +413,7 @@ public class MainState extends BasicState {
 		}
 
 		//Load add ready for game over screen (might unload on pause?)
-		manager.getAdHandler().LoadInterstital();
+		manager.getActionResolver().LoadInterstital();
 	}
 
 	public int getPasses() {
@@ -457,6 +462,14 @@ public class MainState extends BasicState {
 
 	public void setBottomOffset(float bottomOffset) {
 		this.bottomOffset = bottomOffset;
+	}
+	
+	public boolean isSound() {
+		return sound;
+	}
+
+	public void setSound(boolean sound) {
+		this.sound = sound;
 	}
 }
 

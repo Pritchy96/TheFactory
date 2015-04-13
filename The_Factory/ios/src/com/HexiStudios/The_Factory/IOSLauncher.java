@@ -5,7 +5,7 @@ import org.robovm.apple.uikit.UIApplication;
 
 import com.badlogic.gdx.backends.iosrobovm.IOSApplication;
 import com.badlogic.gdx.backends.iosrobovm.IOSApplicationConfiguration;
-import com.HexiStudios.The_Factory.Manager;
+import com.GenericStudios.TheCandyFactory.Manager;
 
 public class IOSLauncher extends IOSApplication.Delegate {
     @Override

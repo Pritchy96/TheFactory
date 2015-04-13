@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">The Factory</string>
-
+    <string name="app_name">The Candy Factory</string>
+	<string name="app_id">435767974615</string> 
 </resources>

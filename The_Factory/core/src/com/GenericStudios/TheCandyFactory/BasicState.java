@@ -1,4 +1,4 @@
-package com.HexiStudios.The_Factory;
+package com.GenericStudios.TheCandyFactory;
 
 public class BasicState {
 	

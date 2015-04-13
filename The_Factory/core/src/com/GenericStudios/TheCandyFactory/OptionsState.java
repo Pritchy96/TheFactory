@@ -1,75 +1,61 @@
-package com.HexiStudios.The_Factory;
+package com.GenericStudios.TheCandyFactory;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class GameOverState extends BasicState {
+public class OptionsState extends BasicState {
 
-	private SpriteBatch batch;
-	private int highscore = manager.getPrefs().getInteger("highscore", 0), textScale = 3;
-	TextBounds line1Bounds, line2Bounds, line3Bounds, line4Bounds;
-	String line1, line2, line3, line4;
-	//Separate font instances so the .getbound method works (libgtx is bugged)
-	BitmapFont font1 = new BitmapFont(), font2 = new BitmapFont(), font3 = new BitmapFont(), font4 = new BitmapFont();
-	long startTime;
+	private Manager manager;
+	Texture background, buttons, scrollingBackground, musicOff, soundOff, debugRect;	//DEBUG
+	private Rectangle musicRect, soundRect, backRect;
+	boolean music, sound;
 
-	public GameOverState(Manager manager, int score)  {
-		super(manager);	
+	public OptionsState(Manager manager)  {
+		super(manager);	      
+		this.manager = manager;
 
-		//Show advertisement.
-		manager.getAdHandler().ShowInterstital();
+		//Load textures
+		buttons  = new Texture(Gdx.files.internal("optionsButtons.png"));
+		musicOff = new Texture(Gdx.files.internal("optionsMusicOffBtn.png"));
+		soundOff  = new Texture(Gdx.files.internal("optionsSoundOffBtn.png"));
+		//DEBUG
+		debugRect  = new Texture(Gdx.files.internal("debugRect.png"));
 
-		batch = manager.getBatch();
+		//Calculate button textures.
+		musicRect = new Rectangle(162, manager.getHeight() - (326 + 128), 367, 128);
+		soundRect = new Rectangle(162, manager.getHeight() - (530 + 128), 367, 128);
+		backRect = new Rectangle(162, manager.getHeight() - (723 + 128), 612, 128);
 
-		//Set text.
-		line1 = "Game over!";
-		line2 = "Score: " + Integer.toString(score);
-		line3 = ("High Score: " + highscore);
-		line4 = "Tap to continue!";
-
-		this.highscore = manager.getPrefs().getInteger("highscore");
-
-		font1.setScale(textScale);
-		font2.setScale(textScale);
-		font3.setScale(textScale);
-		font4.setScale(textScale);
-		manager.getFont().setScale(textScale);
-
-		line1Bounds = font1.getBounds(line1);
-		line2Bounds = font2.getBounds(line2);
-		line3Bounds = font3.getBounds(line3);
-		line4Bounds = font4.getBounds(line4);
-		
-		startTime = TimeUtils.millis();
+		//Set booleans (more efficient than constantly retrieving from prefs)
+		music = manager.getPrefs().getBoolean("music", true);
+		sound = manager.getPrefs().getBoolean("sound", true);
 	}
 
 	@Override
 	public void draw() {
+		manager.getBatch().draw(buttons, 0, 0);
+
+		if (!music)
+		{
+			manager.getBatch().draw(musicOff, musicRect.x, musicRect.y, musicRect.width, musicRect.height);
+		}
+
+		if (!sound)
+		{
+			manager.getBatch().draw(soundOff, soundRect.x, soundRect.y, soundRect.width, soundRect.height);
+		}
+
+
+
 		super.draw();
 	}
 
-	@Override
-	public void drawGUI() {	
-		//How far down the page to draw each line.
-		//Is further offset for the second line so it is drawn under the first and so on.
-		int lineOffsetY = manager.getHeight() - 320;		
-
-		manager.getFont().draw(batch, line1, (manager.getWidth()/2) - (line1Bounds.width/2), lineOffsetY);	
-
-		lineOffsetY -= (int) (manager.getFont().getLineHeight());
-		manager.getFont().draw(batch, line2, (manager.getWidth()/2) - (line2Bounds.width/2), lineOffsetY);	
-
-		lineOffsetY -= (int) (manager.getFont().getLineHeight());
-		manager.getFont().draw(batch, line3, (manager.getWidth()/2) - (line3Bounds.width/2), lineOffsetY);	
-		
-
-		
-		lineOffsetY -= (int) 8*(manager.getFont().getLineHeight());
-		manager.getFont().draw(batch, line4, (manager.getWidth()/2) - (line4Bounds.width/2), lineOffsetY);	
-		
+	@Override 
+	public void drawGUI() {
+		manager.getFont().setScale(4);
 		super.drawGUI();
 	}   
 
@@ -79,26 +65,44 @@ public class GameOverState extends BasicState {
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
-		if (TimeUtils.timeSinceMillis(startTime) > 2000)
+		Vector3 touchPos = new Vector3();
+		touchPos.set(screenX, screenY, 0);
+		manager.getCamera().unproject(touchPos);
+		Vector2 point = new Vector2(touchPos.x, touchPos.y);
+
+		if (musicRect.contains(point))
 		{
-			// process user input
-			Vector3 touchPos = new Vector3();
-			touchPos.set(screenX, screenY, 0);
-			manager.getCamera().unproject(touchPos);
-			Vector2 point = new Vector2(touchPos.x, touchPos.y);
-	
-			manager.changeState(new MenuState(manager));
-			super.touchDown(screenX, screenY, pointer, button);
+			music = !music;
+			manager.getPrefs().putBoolean("music", music);
+			manager.getPrefs().flush();
+			manager.setMusic();
 		}
+		else if(soundRect.contains(point))
+		{
+			sound = !sound;
+			manager.getPrefs().putBoolean("sound", sound);
+			manager.getPrefs().flush();
+			
+			if (sound)
+			{
+				//Play sound to let user know sound is on.
+				manager.getMoveUpSound().play();
+			}
+		}
+		else if(backRect.contains(point))
+		{
+
+			manager.changeState(new MenuState(manager));
+		}
+
+		super.touchDown(screenX, screenY, pointer, button);
 	}
 
 	public void keyDown(int keycode) {
-
 		//LeftUp
 		if (keycode == com.badlogic.gdx.Input.Keys.W)
 		{
 		}
-
 		super.keyDown(keycode);
 	}
 

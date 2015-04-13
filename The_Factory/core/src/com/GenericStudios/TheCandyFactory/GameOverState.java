@@ -1,41 +1,84 @@
-package com.HexiStudios.The_Factory;
+package com.GenericStudios.TheCandyFactory;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-public class HowToPlayState extends BasicState {
+public class GameOverState extends BasicState {
 
 	private SpriteBatch batch;
-	private int picture = 0, textScale = 3;
-	private Texture one = new Texture(Gdx.files.internal("tutorialOne.png"));
-	private Texture two = new Texture(Gdx.files.internal("tutorialTwo.png"));
+	private int highscore = manager.getPrefs().getInteger("highscore", 0), score = 0, textScale = 3;
+	TextBounds line1Bounds, line2Bounds, line3Bounds;
+	String line1, line2, line3;
+	Rectangle submit, viewScores, cont;
+	Texture buttons;
+	//Separate font instances so the .getbound method works (libgtx is bugged)
+	BitmapFont font1 = new BitmapFont(), font2 = new BitmapFont(), font3 = new BitmapFont();
+	long startTime;
 
-	public HowToPlayState(Manager manager)  {
+	public GameOverState(Manager manager, int score)  {
 		super(manager);	
+
+		//Show advertisement.
+		manager.getActionResolver().ShowInterstital();
+		
 		batch = manager.getBatch();
+		buttons  = new Texture(Gdx.files.internal("gameOverButtons.png"));
+
+		//Set text.
+		line1 = "Game over!";
+		line2 = "Score: " + Integer.toString(score);
+		line3 = ("High Score: " + highscore);
+		
+
+		this.highscore = manager.getPrefs().getInteger("highscore");
+		this.score = score;
+
+		font1.setScale(textScale);
+		font2.setScale(textScale);
+		font3.setScale(textScale);
+		
+		manager.getFont().setScale(textScale);
+
+		line1Bounds = font1.getBounds(line1);
+		line2Bounds = font2.getBounds(line2);
+		line3Bounds = font3.getBounds(line3);
+	
+		startTime = TimeUtils.millis();
+		
+		submit = new Rectangle(162, manager.getHeight() - (454 + 128), 366, 128);
+		cont = new Rectangle(162, manager.getHeight() - (581 + 128), 366, 128);
+		viewScores = new Rectangle(162, manager.getHeight() - (765 + 128), 612, 128);
+		
+		manager.getActionResolver().submitScoreGPGS(score);;
+		
 	}
 
 	@Override
 	public void draw() {
-		
-		if (picture == 0)
-		{
-			batch.draw(one, 0, 0);
-		}
-		else 
-		{
-			batch.draw(two, 0, 0);
-		}
+		batch.draw(buttons, 0, 0);
 		super.draw();
 	}
 
 	@Override
 	public void drawGUI() {	
+		//How far down the page to draw each line.
+		//Is further offset for the second line so it is drawn under the first and so on.
+		int lineOffsetY = manager.getHeight() - 280;		
+
+		manager.getFont().draw(batch, line1, (manager.getWidth()/2) - (line1Bounds.width/2), lineOffsetY);	
+
+		lineOffsetY -= (int) (manager.getFont().getLineHeight());
+		manager.getFont().draw(batch, line2, (manager.getWidth()/2) - (line2Bounds.width/2), lineOffsetY);	
+
+		lineOffsetY -= (int) (manager.getFont().getLineHeight());
+		manager.getFont().draw(batch, line3, (manager.getWidth()/2) - (line3Bounds.width/2), lineOffsetY);	
+		
 		super.drawGUI();
 	}   
 
@@ -45,13 +88,34 @@ public class HowToPlayState extends BasicState {
 	}
 
 	public void touchDown(int screenX, int screenY, int pointer, int button) {
-		if (picture == 0)
+		if (TimeUtils.timeSinceMillis(startTime) > 2000)
 		{
-			picture++;
-		}
-		else
-		{
-			manager.changeState(new MenuState(manager));
+			// process user input
+			Vector3 touchPos = new Vector3();
+			touchPos.set(screenX, screenY, 0);
+			manager.getCamera().unproject(touchPos);
+			Vector2 point = new Vector2(touchPos.x, touchPos.y);
+			
+			if (cont.contains(point))
+			{
+				manager.changeState(new MenuState(manager));
+			}
+			/*
+			else if(submit.contains(point))
+			{
+				manager.getActionResolver().submitScoreGPGS(score);
+				manager.getActionResolver().getLeaderboardGPGS();
+			}
+			*/
+			else if(viewScores.contains(point))
+			{
+				manager.getActionResolver().getLeaderboardGPGS();
+			}
+
+	
+			
+			//manager.changeState(new MenuState(manager));
+			super.touchDown(screenX, screenY, pointer, button);
 		}
 	}
 
